@@ -1,0 +1,10 @@
+abstract_apis
+PyQt5
+abstract_webtools
+abstract_utilities
+abstract_gui
+pydot
+abstract_clipit
+flask
+abstract_paths
+PyQt6
