@@ -18,4 +18,7 @@ class functionsTab(QWidget):
         self.current_var = None
         self.use_flow=use_flow
         self._build_ui()
+
+
+
 functionsTab = initFuncs(functionsTab)

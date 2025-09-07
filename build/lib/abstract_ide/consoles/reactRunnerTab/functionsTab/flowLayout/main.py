@@ -9,4 +9,7 @@ class flowLayout(QLayout):
         self._h = hspacing
         self._v = vspacing
         self.setContentsMargins(margin, margin, margin, margin)
+        # let the parent compute height-for-width
+        self.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+    
 flowLayout = initFuncs(flowLayout)

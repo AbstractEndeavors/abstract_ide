@@ -42,3 +42,6 @@ def _filter_fn_buttons(self, text: str):
     else:
         match = [n for n in self.func_map.keys() if t in n.lower()]
         self._rebuild_fn_buttons(match)
+def expandingDirections(self):
+    # allow using extra horizontal space so items can wrap
+    return Qt.Orientations(Qt.Orientation.Horizontal)

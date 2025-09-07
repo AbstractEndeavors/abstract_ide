@@ -8,7 +8,7 @@ from .appRunnerTab import appRunnerTab, startAppRunnerConsole
 from .reactRunnerTab import reactRunnerTab, startReactRunnerConsole
 from .windowManagerTab import windowManagerTab, startWindowManagerConsole
 from .launcherWindowTab import launcherWindowTab, startLauncherWindowConsole
-
+from .webPardnerTab import webPardnerTab,startWebPardnerConsole
 from abstract_gui.QT6 import QTabWidget,QMainWindow
 from abstract_gui.QT6.utils.console_utils import ConsoleBase
 from abstract_gui.QT6.utils.console_utils import startConsole
@@ -23,7 +23,10 @@ class ideTab(ConsoleBase):
         inner.addTab(finderConsole(),   "Finder")
         inner.addTab(apiTab(),   "Api")
         inner.addTab(clipitTab(),   "Clipit")
+        inner.addTab(webPardnerTab(),   "Web Pardner")
         inner.addTab(windowManagerTab(),   "Window Mgr")
         inner.addTab(launcherWindowTab(),   "launcherWindow")
         inner.addTab(imageTab(),   "Images")
         inner.addTab(logPaneTab(),   "logs")
+        
+        
