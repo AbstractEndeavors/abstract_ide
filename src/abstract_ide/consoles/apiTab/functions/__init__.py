@@ -1,5 +1,5 @@
 from .combo_utils import (_make_value_combo, _make_type_combo, _mime_values_for_category, _on_type_changed)
-from .endpoint_utils import (fetch_remote_endpoints, _populate_endpoints, on_endpoint_selected, methodComboInit)
+from .endpoint_utils import (fetch_remote_endpoints, on_endpoint_selected, methodComboInit, _populate_endpoints, on_endpoint_selected, methodComboInit)
 from .base_utils import (_on_base_index_changed, _on_base_changed, _on_base_text_edited, _collect_kv, _build_url)
 from .collect_utils import (_collect_table_data, _collect_headers)
 from .http_helpers import (_probe_session, canonicalize_slash)

@@ -1,0 +1,23 @@
+2025-09-09 01:59:24,132 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://abstractendeavors.com/utils/endpoints
+2025-09-09 01:59:24,437 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/utils/endpoints
+2025-09-09 01:59:42,492 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → Detecting prefix from ['https://abstractendeavors.com/config', 'https://abstractendeavors.com/__config', 'https://abstractendeavors.com/_meta']
+2025-09-09 01:59:42,515 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/config
+2025-09-09 01:59:42,530 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/__config
+2025-09-09 01:59:42,553 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/_meta
+2025-09-09 01:59:42,560 - WARNING - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ⚠ No prefix detected; using /api
+2025-09-09 01:59:55,238 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://abstractendeavors.com/api/endpoints
+2025-09-09 01:59:55,287 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/api/endpoints
+2025-09-09 02:00:01,891 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://abstractendeavors.com/utils/endpoints
+2025-09-09 02:00:01,940 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/utils/endpoints
+2025-09-09 02:01:13,254 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET http://127.0.0.1:5000/api/endpoints
+2025-09-09 02:01:13,314 - ERROR - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✖ GET http://127.0.0.1:5000/api/endpoints — NetworkError.ContentNotFoundError: Error transferring http://127.0.0.1:5000/api/endpoints - server replied: NOT FOUND
+2025-09-09 02:01:36,650 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://abstractendeavors/utils/endpoints
+2025-09-09 02:01:36,845 - ERROR - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✖ GET https://abstractendeavors/utils/endpoints — NetworkError.SslHandshakeFailedError: SSL handshake failed: The host name did not match any of the valid hosts for this certificate
+2025-09-09 02:01:42,417 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://abstractendeavors.com/utils/endpoints
+2025-09-09 02:01:42,508 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/utils/endpoints
+2025-09-09 02:02:05,533 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://abstractendeavors.com/utils/endpoints
+2025-09-09 02:02:05,633 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/utils/endpoints
+2025-09-09 02:05:08,995 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://abstractendeavors.com/utils/endpoints
+2025-09-09 02:05:09,126 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/utils/endpoints
+2025-09-09 02:05:20,429 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://abstractendeavors.com/utils/endpoints
+2025-09-09 02:05:20,501 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/utils/endpoints

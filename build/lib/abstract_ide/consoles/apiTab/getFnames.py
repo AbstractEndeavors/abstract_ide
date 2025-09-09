@@ -11,7 +11,7 @@ filepaths = [
     if item.endswith(".py") and item != "__init__.py"
        and os.path.isfile(os.path.join(FUNCS_DIR, item))
 ]
-input(filepaths)
+
 # Parse top-level def names
 def extract_funcs(path: str):
     funcs = []
