@@ -81,7 +81,7 @@ def send_request(self):
 
     # --- Dispatch (attach query params for GET) ---
     label = f"{method} {base_url}"
-    self.response_out.clear()
+    self.response_output.clear()
     self._log(f"→ {label} | headers={headers} | params={kv}")
 
     if method == "GET":
