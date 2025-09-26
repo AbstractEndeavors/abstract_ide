@@ -11,7 +11,7 @@ def _write_temp_script(text: str) -> str:
 	with os.fdopen(fd, "w", encoding="utf-8") as f:
 		f.write(text)
 	return path
-class launcherWindowTab(QtWidgets.QMainWindow):
+class scriptWindowTab(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Universal App Launcher (supervised)")
@@ -30,7 +30,10 @@ class launcherWindowTab(QtWidgets.QMainWindow):
         etb.addSeparator()
         run_buf_act = etb.addAction("Run Code (F5)")
         run_sel_act = etb.addAction("Run Selection (F6)")
-
+        
+        self.input_form = QFormLayout()
+        self.input_widget = QWidget()
+        self.input_widget.setLayout(self.input_form)
         # Editor
         self.editor = QtWidgets.QPlainTextEdit()
         self._set_mono_font(self.editor)
@@ -73,6 +76,21 @@ class launcherWindowTab(QtWidgets.QMainWindow):
         QtGui.QShortcut(QtGui.QKeySequence("F5"), self, activated=self._on_run_code)
         QtGui.QShortcut(QtGui.QKeySequence("F6"), self, activated=self._on_run_selection)
         self._install_excepthook()
+    def show_inputs(self, pkg, fn):
+        # Clear old inputs
+        while self.input_form.rowCount():
+            self.input_form.removeRow(0)
+
+        self.current_pkg = pkg
+
+        self.arg_edits = []
+
+        self.current_fn = fn["name"]
+        for param in fn.get("params", []):
+            edit = QLineEdit()
+            self.input_form.addRow(QLabel(f"{param}:"), edit)
+            self.arg_edits.append(edit)
+
     def _install_excepthook(self):
             # keep UI alive on exceptions triggered by button/shortcut handlers
             def _excepthook(exctype, value, tb):

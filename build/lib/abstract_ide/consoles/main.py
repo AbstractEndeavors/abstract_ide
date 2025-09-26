@@ -7,6 +7,7 @@ from .logPaneTab import logPaneTab, startLogPaneConsole
 from .appRunnerTab import appRunnerTab, startAppRunnerConsole
 from .reactRunnerTab import reactRunnerTab, startReactRunnerConsole
 from .windowManagerTab import windowManagerTab, startWindowManagerConsole
+from .scriptWindowTab import scriptWindowTab, startScriptWindowConsole
 from .launcherWindowTab import launcherWindowTab, startLauncherWindowConsole
 from .webPardnerTab import webPardnerTab,startWebPardnerConsole
 from abstract_gui.QT6 import QTabWidget,QMainWindow
@@ -26,6 +27,7 @@ class ideTab(ConsoleBase):
         inner.addTab(webPardnerTab(),   "Web Pardner")
         inner.addTab(windowManagerTab(),   "Window Mgr")
         inner.addTab(launcherWindowTab(),   "launcherWindow")
+        inner.addTab(scriptWindowTab(),   "scriptWindow")
         inner.addTab(imageTab(),   "Images")
         inner.addTab(logPaneTab(),   "logs")
         

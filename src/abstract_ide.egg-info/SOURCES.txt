@@ -213,6 +213,13 @@ src/abstract_ide/consoles/reactRunnerTab/runnerTab/functions/logEntries_utils.py
 src/abstract_ide/consoles/reactRunnerTab/runnerTab/functions/warning_utils.py
 src/abstract_ide/consoles/reactRunnerTab/testRunnerTab/__init__.py
 src/abstract_ide/consoles/reactRunnerTab/testRunnerTab/main.py
+src/abstract_ide/consoles/scriptWindowTab/__init__.py
+src/abstract_ide/consoles/scriptWindowTab/backup.py
+src/abstract_ide/consoles/scriptWindowTab/imports.py
+src/abstract_ide/consoles/scriptWindowTab/initFuncs.py
+src/abstract_ide/consoles/scriptWindowTab/main.py
+src/abstract_ide/consoles/scriptWindowTab/functions/__init__.py
+src/abstract_ide/consoles/scriptWindowTab/functions/core_utils.py
 src/abstract_ide/consoles/webPardnerTab/__init__.py
 src/abstract_ide/consoles/webPardnerTab/initFuncs.py
 src/abstract_ide/consoles/webPardnerTab/main.py

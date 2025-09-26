@@ -19,7 +19,7 @@ from typing import Tuple, List
 from abstract_gui.QT6.utils.console_utils.startConsole import *
 from abstract_utilities import *
 # Works when run as a script or via -m (derives package from this file):
-logPaneTab   = safe_import("..logPaneTab",   member="logPaneTab",   file=__file__, caller_globals=globals())
+#logPaneTab   = safe_import("..logPaneTab",   member="logPaneTab",   file=__file__, caller_globals=globals())
 
 def _which(prog: str) -> str | None:
     return shutil.which(prog)
@@ -118,7 +118,7 @@ class appRunnerTab(QtCore.QObject):
         self._last_cmd = None
         self._last_cwd = None
         self._last_env = None
-        self.log_pane = log_pane or logPaneTab
+        self.log_pane = log_pane
 
     # replace your AppRunner.start with this version
     def start(self, cmd: list[str] | str, cwd: str | None = None, env: dict | None = None, force_line_buffer: bool = True):

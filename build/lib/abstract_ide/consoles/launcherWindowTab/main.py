@@ -1,10 +1,11 @@
 import os
-
+from ..logPaneTab import logPaneTab
+from ..appRunnerTab import appRunnerTab
 from abstract_gui.QT6.utils.console_utils.startConsole import *
 from abstract_utilities import *
 # Works when run as a script or via -m (derives package from this file):
-logPaneTab   = safe_import("..logPaneTab",   member="logPaneTab",   file=__file__, caller_globals=globals())
-appRunnerTab = safe_import("..appRunnerTab", member="appRunnerTab", file=__file__, caller_globals=globals())
+##logPaneTab   = safe_import("..logPaneTab",   member="logPaneTab",   file=__file__, caller_globals=globals())
+##appRunnerTab = safe_import("..appRunnerTab", member="appRunnerTab", file=__file__, caller_globals=globals())
 def _write_temp_script(text: str) -> str:
 	fd, path = tempfile.mkstemp(prefix="abstract_ide_", suffix=".py")
 	with os.fdopen(fd, "w", encoding="utf-8") as f:

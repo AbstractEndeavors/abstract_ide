@@ -21,3 +21,28 @@
 2025-09-09 02:05:09,126 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/utils/endpoints
 2025-09-09 02:05:20,429 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://abstractendeavors.com/utils/endpoints
 2025-09-09 02:05:20,501 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/utils/endpoints
+2025-09-11 12:29:23,565 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → Detecting prefix from ['https://abstractendeavors.com/config', 'https://abstractendeavors.com/__config', 'https://abstractendeavors.com/_meta']
+2025-09-11 12:29:23,828 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/config
+2025-09-11 12:29:23,860 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/__config
+2025-09-11 12:29:23,864 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/_meta
+2025-09-11 12:29:23,864 - WARNING - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ⚠ No prefix detected; using /api
+2025-09-11 12:29:26,025 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://abstractendeavors.com/api/endpoints
+2025-09-11 12:29:26,047 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://abstractendeavors.com/api/endpoints
+2025-09-11 12:29:44,649 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → Detecting prefix from ['https://clownworld.biz/config', 'https://clownworld.biz/__config', 'https://clownworld.biz/_meta']
+2025-09-11 12:29:44,728 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://clownworld.biz/config
+2025-09-11 12:29:44,770 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://clownworld.biz/__config
+2025-09-11 12:29:44,783 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://clownworld.biz/_meta
+2025-09-11 12:29:44,783 - WARNING - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ⚠ No prefix detected; using /api
+2025-09-11 12:29:53,766 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → Detecting prefix from ['https://clownworld.biz/config', 'https://clownworld.biz/__config', 'https://clownworld.biz/_meta']
+2025-09-11 12:29:53,779 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://clownworld.biz/config
+2025-09-11 12:29:53,790 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://clownworld.biz/__config
+2025-09-11 12:29:53,805 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://clownworld.biz/_meta
+2025-09-11 12:29:53,806 - WARNING - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ⚠ No prefix detected; using /api
+2025-09-11 12:30:00,356 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://clownworld.biz/MEDIA/endpoints
+2025-09-11 12:30:00,367 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://clownworld.biz/MEDIA/endpoints
+2025-09-11 12:30:05,818 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://clownworld.biz/media/endpoints
+2025-09-11 12:30:05,830 - ERROR - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✖ GET https://clownworld.biz/media/endpoints — NetworkError.ContentNotFoundError: Error transferring https://clownworld.biz/media/endpoints - server replied: 
+2025-09-11 12:30:13,228 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://clownworld.biz/api/endpoints
+2025-09-11 12:30:13,236 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://clownworld.biz/api/endpoints
+2025-09-11 12:30:13,458 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - → GET https://clownworld.biz/api/endpoints
+2025-09-11 12:30:13,470 - INFO - /home/computron/Documents/pythonTools/modules/abstract_ide/src/abstract_ide/consoles/apiTab/main.py - ✔ GET https://clownworld.biz/api/endpoints
