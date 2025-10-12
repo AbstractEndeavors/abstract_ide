@@ -8,7 +8,9 @@ class finderTab(QWidget):
         grid = QGridLayout()
         install_common_inputs(
             self, grid, bus=bus,
-            primary_btn=("Run search", self.start_search)
+            primary_btn=("Run search", self.start_search),
+            secondary_btn=("stop search", self.stop_search)
+
         )
         # Output area
         self.layout().addWidget(QLabel("Results"))

@@ -49,6 +49,9 @@ def filter_paths(self, paths: list[str]) -> list[str]:
     self._log(f"Proceeding to process {len(filtered)} file(s).")
     return filtered
 
+# add near the top of the file
+RAW_EXTS = {'.json', '.ts', '.tsx', '.js', '.css', '.html', '.md'}
+
 def get_contents_text(self, file_path: str, idx: int = 0, filtered_paths: list[str] = []):
     basename = os.path.basename(file_path)
     filename, ext = os.path.splitext(basename)
@@ -62,13 +65,18 @@ def get_contents_text(self, file_path: str, idx: int = 0, filtered_paths: list[s
             'ext': ext,
             'text': "",
             'error': False,
-            'visible': True
+            'visible': True,
+            'raw': ext.lower() in RAW_EXTS,   # <<< NEW
         }
         try:
             body = read_file_as_text(file_path) or ""
             if isinstance(body, list):
                 body = "\n".join(body)
-            info["text"] = [header, body, footer]
+            # If raw, do NOT wrap with header/footer
+            if info['raw']:
+                info["text"] = ["", body, ""]     # <<< NEW (body only)
+            else:
+                info["text"] = [header, body, footer]
             if ext == '.py':
                 self._parse_functions(file_path, str(body))
         except Exception as exc:

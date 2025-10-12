@@ -18,7 +18,7 @@ class FileDropArea(QtWidgets.QWidget):
         self._last_raw_paths: list[str] = []
         self.functions: list[dict] = []
         self.python_files: list[dict] = []
-        self.combined_text_lines: dict[str, dict] = {}
+        
         self.allowed_exts = DEFAULT_ALLOWED_EXTS
         self.unallowed_exts = DEFAULT_UNALLOWED_EXTS
         self.exclude_types = DEFAULT_EXCLUDE_TYPES
@@ -28,11 +28,10 @@ class FileDropArea(QtWidgets.QWidget):
 
         # Main vertical layout
         lay = QtWidgets.QVBoxLayout(self)
-
         # 1) “Browse Files…” button
         browse_btn = get_push_button(text="Browse Files…", action=self.browse_files)
         self.view_toggle = 'array'
-
+        self.view_widget = 'print'   # lossless by default
         # 2) Extension-filter row
         self.ext_row = QtWidgets.QScrollArea(widgetResizable=True)
         self.ext_row.setFixedHeight(45)

@@ -32,6 +32,13 @@ def on_tree_copy(self, paths: List[str]):
     """
     self._log(f"Copy Selected triggered on {len(paths)} path(s).")
     self.drop_area.process_files(paths)
+def copy_raw(self):
+    chunks = []
+    for _, info in self.combined_text_lines.items():
+        body = info['text'][1] if isinstance(info['text'], list) else info['text']
+        chunks.append(body)
+    QtWidgets.QApplication.clipboard().setText("\n\n".join(chunks))
+    self._log("✅ Copied RAW bodies to clipboard")
 
 def on_tree_double_click(self, index: QtCore.QModelIndex):
     model = self.tree_wrapper.model

@@ -1,10 +1,10 @@
 
 
-from functions import (append_log, populate_results, start_search)
+from .functions import (start_search,)
 
 def initFuncs(self):
     try:
-        for f in (append_log, populate_results, start_search):
+        for f in (start_search,):
             setattr(self, f.__name__, f)
     except Exception as e:
         logger.info(f"{e}")

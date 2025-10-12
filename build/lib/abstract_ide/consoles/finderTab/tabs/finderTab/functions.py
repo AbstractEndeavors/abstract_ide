@@ -1,6 +1,7 @@
 from abstract_gui.QT6 import *
 import os
 from abstract_gui.QT6.utils.log_utils.robustLogger.searchWorker import *
+from abstract_paths import reset_find_console_stop,request_find_console_stop,findContent
 # Data structures
 @dataclass
 class initSearchParams:
@@ -14,6 +15,50 @@ class initSearchParams:
     spec_line: Union[bool, int] = False
     get_lines: bool = True
     # ————————————————————————————————————————————————————————————————
+
+# ————————————————————————————————————————————————————————————————
+# Main GUI
+# Define SearchParams if not already defined
+# Define SearchParams if not already defined
+@dataclass
+class SearchParams:
+    directory: str
+    allowed_exts: Union[bool, Set[str]]
+    unallowed_exts: Union[bool, Set[str]]
+    exclude_types: Union[bool, Set[str]]
+    exclude_dirs: Union[bool, List[str]]
+    exclude_patterns: Union[bool, List[str]]
+    add: bool
+    recursive: bool
+    strings: List[str]
+    total_strings: bool
+    parse_lines: bool
+    spec_line: Union[bool, int]
+    get_lines: bool
+class SearchWorker(QThread):
+    log = pyqtSignal(str)
+    done = pyqtSignal(list)
+    def __init__(self, params: SearchParams):
+        super().__init__()
+        self.params = params
+    def run(self):
+        self.log.emit("Starting search...\n")
+        try:
+            results = findContent(
+                **self.params
+            )
+            self.done.emit(results or [])
+            logging.info("Search finished: %d hits", len(results or []))
+        except Exception as e:
+            tb = "".join(traceback.format_exc())
+            logging.exception("Worker crashed: %s", e)
+            self.log.emit("❌ Worker crashed:\n" + tb)
+def enable_widget(parent, name: str, enabled: bool):
+    try:
+        getattr(parent, name).setEnabled(enabled)
+    except AttributeError:
+        print(f"[WARN] No widget {name} in {parent}")
+
 # Background worker so the UI doesn’t freeze
 class initSearchWorker(QThread):
     log = pyqtSignal(str)
@@ -45,44 +90,6 @@ class initSearchWorker(QThread):
         except Exception:
             self.log.emit(traceback.format_exc())
             self.done.emit([])
-# ————————————————————————————————————————————————————————————————
-# Main GUI
-# Define SearchParams if not already defined
-# Define SearchParams if not already defined
-@dataclass
-class SearchParams:
-    directory: str
-    allowed_exts: Union[bool, Set[str]]
-    unallowed_exts: Union[bool, Set[str]]
-    exclude_types: Union[bool, Set[str]]
-    exclude_dirs: Union[bool, List[str]]
-    exclude_patterns: Union[bool, List[str]]
-    add: bool
-    recursive: bool
-    strings: List[str]
-    total_strings: bool
-    parse_lines: bool
-    spec_line: Union[bool, int]
-    get_lines: bool
-
-class SearchWorker(QThread):
-    log = pyqtSignal(str)
-    done = pyqtSignal(list)
-    def __init__(self, params: SearchParams):
-        super().__init__()
-        self.params = params
-    def run(self):
-        self.log.emit("Starting search...\n")
-        try:
-            results = findContent(
-                **self.params
-            )
-            self.done.emit(results or [])
-            logging.info("Search finished: %d hits", len(results or []))
-        except Exception as e:
-            tb = "".join(traceback.format_exc())
-            logging.exception("Worker crashed: %s", e)
-            self.log.emit("❌ Worker crashed:\n" + tb)
 def enable_widget(parent, name: str, enabled: bool):
     try:
         getattr(parent, name).setEnabled(enabled)
@@ -91,16 +98,22 @@ def enable_widget(parent, name: str, enabled: bool):
 
 # — Actions —
 def start_search(self):
- 
-    enable_widget(self,"btn_run",False)
+    reset_find_console_stop()  # reset flag before starting
+
+    enable_widget(self, "btn_run", False)
+    enable_widget(self, "btn_stop", True)   # enable stop button
 
     params = make_params(self)
-
     self.worker = SearchWorker(params)
     self.worker.log.connect(self.append_log)
     self.worker.done.connect(self.populate_results)
     self.worker.finished.connect(lambda: enable_widget(self,"btn_run",True))
     self.worker.start()
+def stop_search(self):
+    if hasattr(self, "worker") and self.worker.isRunning():
+        request_find_console_stop()
+        enable_widget(self, "btn_run", True)
+        enable_widget(self, "btn_stop", False)
 
 def append_log(self, text: str):
     """
@@ -134,6 +147,7 @@ def append_log(self, text: str):
 
 def populate_results(self, results: list):
     self._last_results = results or []
+    self.list.clear()
     if not results:
         self.append_log("✅ No matches found.\n")
         enable_widget(self, "btn_secondary", False)

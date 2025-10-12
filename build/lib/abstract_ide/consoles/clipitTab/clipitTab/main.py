@@ -19,7 +19,8 @@ class clipitTab(QtWidgets.QWidget):
                          title=title,
                          size=size)
         main_layout = get_layout(parent=self)
-        
+                
+        self.combined_text_lines: dict[str, dict] = {}
         # 1) Toolbar with “Toggle Logs”
         toolbar = make_toolbar(self)
 
@@ -35,7 +36,14 @@ class clipitTab(QtWidgets.QWidget):
         toolbar.addWidget(btn_view)
         self.toggle_view_action = btn_view
 
-        self.view_widget = 'array'
+        # Main vertical layout
+        lay = QtWidgets.QVBoxLayout(self)
+        copy_raw = QPushButton("Copy Raw", self)
+        copy_raw.toggled.connect(self.copy_raw)
+        toolbar.addWidget(copy_raw)
+        self.toggle_view_action = copy_raw
+        self.view_widget = 'print'   # lossless by default
+
         # 2) Splitter: left = FileSystemTree; right = FileDropArea
         splitter = QtWidgets.QSplitter(
             QtCore.Qt.Orientation.Horizontal,  # was just "QtCore.Orientation"
