@@ -1,12 +1,10 @@
 from ..imports import *
 def _update_dir_patterns(self):
     """Update self.exclude_dirs from dir_input text."""
-    text = self.dir_checks
-    if text:
-        self.exclude_dirs = self.dir_checks
-    else:
-        self.exclude_dirs = set()
-    self.exclude_dirs.update(self.exclude_dirs)  # Include defaults
+    checked = {name for name, cb in self.dir_checks.items() if cb.isChecked()}
+    self.user_exclude_dirs = checked
+    # keep defaults + user excludes
+    self.exclude_dirs = set(DEFAULT_EXCLUDE_DIRS) | {"backup", "backups"} | self.user_exclude_dirs
 
     #self._log(f"Directory row visible: True, checkboxes: {list(new_checks.keys())}")
 
@@ -98,10 +96,20 @@ def process_files(self, paths: list[str] = None) -> None:
         visible_exts = {ext for ext, cb in self.ext_checks.items() if cb.isChecked()}
         visible_dirs = {di for di, cb in self.dir_checks.items() if cb.isChecked()}
         self._log(f"Visible extensions: {visible_exts}")
-        filtered_paths = [
-            p for p in filtered
-            if (os.path.isdir(p) or os.path.splitext(p)[1].lower() in visible_exts) and not is_string_in_dir(p,list(visible_dirs))
-        ]
+        def in_any_dir(path: str, dirs: set[str]) -> bool:
+            return any(d and d in path for d in dirs)
+
+        if visible_dirs:
+            filtered_paths = [
+                p for p in filtered
+                if (os.path.isdir(p) or os.path.splitext(p)[1].lower() in visible_exts)
+                and in_any_dir(p, visible_dirs)
+            ]
+        else:
+            filtered_paths = [
+                p for p in filtered
+                if os.path.isdir(p) or os.path.splitext(p)[1].lower() in visible_exts
+            ]
     else:
         filtered_paths  = filtered
     if not filtered_paths:
@@ -163,4 +171,3 @@ def _clear_layout(self, layout: QtWidgets.QLayout) -> None:
             item.widget().deleteLater()
         elif item.layout():
             self._clear_layout(item.layout())
-

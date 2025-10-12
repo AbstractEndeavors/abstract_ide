@@ -38,10 +38,10 @@ class clipitTab(QtWidgets.QWidget):
 
         # Main vertical layout
         lay = QtWidgets.QVBoxLayout(self)
-        copy_raw = QPushButton("Copy Raw", self)
-        copy_raw.toggled.connect(self.copy_raw)
-        toolbar.addWidget(copy_raw)
-        self.toggle_view_action = copy_raw
+        btn_copy_raw = QPushButton("Copy Raw", self)
+        btn_copy_raw.clicked.connect(self.copy_raw)   # <— clicked, not toggled
+        toolbar.addWidget(btn_copy_raw)
+        self.copy_raw_action = btn_copy_raw           # <— don’t overwrite toggle_view_action
         self.view_widget = 'print'   # lossless by default
 
         # 2) Splitter: left = FileSystemTree; right = FileDropArea

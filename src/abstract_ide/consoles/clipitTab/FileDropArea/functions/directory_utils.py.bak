@@ -1,10 +1,12 @@
 from ..imports import *
 def _update_dir_patterns(self):
     """Update self.exclude_dirs from dir_input text."""
-    checked = {name for name, cb in self.dir_checks.items() if cb.isChecked()}
-    self.user_exclude_dirs = checked
-    # keep defaults + user excludes
-    self.exclude_dirs = set(DEFAULT_EXCLUDE_DIRS) | {"backup", "backups"} | self.user_exclude_dirs
+    text = self.dir_checks
+    if text:
+        self.exclude_dirs = self.dir_checks
+    else:
+        self.exclude_dirs = set()
+    self.exclude_dirs.update(self.exclude_dirs)  # Include defaults
 
     #self._log(f"Directory row visible: True, checkboxes: {list(new_checks.keys())}")
 

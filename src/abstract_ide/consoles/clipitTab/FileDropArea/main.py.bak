@@ -22,9 +22,9 @@ class FileDropArea(QtWidgets.QWidget):
         self.allowed_exts = DEFAULT_ALLOWED_EXTS
         self.unallowed_exts = DEFAULT_UNALLOWED_EXTS
         self.exclude_types = DEFAULT_EXCLUDE_TYPES
-        self.exclude_dirs = set(DEFAULT_EXCLUDE_DIRS) | {"backup", "backups"}
-        self.exclude_patterns = set(DEFAULT_EXCLUDE_PATTERNS)
-        self.user_exclude_dirs = set()  # ← if you need user additions, keep them separate
+        self.exclude_dirs = DEFAULT_EXCLUDE_DIRS | {"backup", "backups"}
+        self.exclude_patterns = DEFAULT_EXCLUDE_PATTERNS
+        self.exclude_dirs = set()  # New: store user-specified dir patterns
 
         # Main vertical layout
         lay = QtWidgets.QVBoxLayout(self)

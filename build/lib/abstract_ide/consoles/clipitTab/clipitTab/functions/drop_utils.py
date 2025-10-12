@@ -35,7 +35,8 @@ def on_tree_copy(self, paths: List[str]):
 def copy_raw(self):
     chunks = []
     for _, info in self.combined_text_lines.items():
-        body = info['text'][1] if isinstance(info['text'], list) else info['text']
+        txt = info.get('text')
+        body = txt[1] if isinstance(txt, list) else str(txt or "")
         chunks.append(body)
     QtWidgets.QApplication.clipboard().setText("\n\n".join(chunks))
     self._log("✅ Copied RAW bodies to clipboard")
@@ -64,4 +65,3 @@ def on_file_selected(self, file_info: dict):
 def _log(self, message: str):
     """Write to the shared log widget with a timestamp."""
     log_it(self=self, message=message)
-

@@ -31,7 +31,8 @@ def _populate_list_view(self) -> None:
 def copy_raw(self):
     chunks = []
     for _, info in self.combined_text_lines.items():
-        body = info['text'][1] if isinstance(info['text'], list) else info['text']
+        txt = info.get('text')
+        body = txt[1] if isinstance(txt, list) else str(txt or "")
         chunks.append(body)
     QtWidgets.QApplication.clipboard().setText("\n\n".join(chunks))
     self.status.setText("✅ Copied RAW bodies to clipboard")
@@ -47,12 +48,17 @@ def _populate_text_view(self) -> None:
                 continue
             lines = info['text']
 
-            # Only compress with repr() for NON-raw files and only in array view
-            if self.view_toggle != 'print' and not info.get('raw'):
-                lines = [lines[0], repr(lines[1]), lines[-1]]
+            is_raw = bool(info.get('raw'))
+            if is_raw:
+                # body only, exactly as read
+                lines = [lines[1]] if isinstance(lines, list) else [str(lines)]
             else:
-                # keep full, exact body (no decoration for raw files)
-                lines = [l for l in lines if l is not None]
+                # Non-raw: header/body/footer with optional compacting in non-print view
+                if self.view_toggle != 'print':
+                    body = repr(lines[1]) if isinstance(lines, list) else repr(lines)
+                    lines = [lines[0], body, lines[-1]]
+                else:
+                    lines = [l for l in lines if l is not None]
 
             seg = "\n".join(lines)
             parts.append(seg)
@@ -64,7 +70,23 @@ def _populate_text_view(self) -> None:
     except Exception as e:
         print(f"{e}")
 
-
+def copy_raw_with_paths(self):
+    parts = []
+    for path, info in self.combined_text_lines.items():
+        if not info.get('visible', True):
+            continue
+        lines = info['text']
+        is_raw = bool(info.get('raw'))
+        if is_raw:
+            # add banner + body
+            parts.append(f"=== {path} ===\n{lines[1]}\n")
+        else:
+            # already [header, body, footer]
+            parts.append("\n".join([l for l in lines if l is not None]))
+        parts.append("\n――――――――――――――――――\n")
+    payload = "\n".join(parts).rstrip()
+    QtWidgets.QApplication.clipboard().setText(payload)
+    self.status.setText("✅ Copied with absolute paths")
 def _toggle_populate_text_view(self, view_toggle=None) -> None:
     try:
         if view_toggle:
