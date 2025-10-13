@@ -1,16 +1,24 @@
 from ..imports import *
-def populate_python_view(self) -> None:
+def populate_file_view(self) -> None:
+    """List *all* currently processed files, not just .py."""
     try:
         self.python_file_list.clear()
-        all_paths = [info['path'] for info in self.python_files]
+        # All files we processed in this pass:
+        all_paths = list(self.combined_text_lines.keys())
+        if not all_paths:
+            self.python_file_list.setVisible(False)
+            return
+        # Which of the originally provided paths are still visible per filters:
         filtered_set = set(self.filter_paths(self._last_raw_paths))
         for p in all_paths:
-            item = QtWidgets.QListWidgetItem(os.path.basename(p))
-            item.setData(Qt.ItemDataRole.UserRole, p)
+            base = os.path.basename(p)
+            item = QtWidgets.QListWidgetItem(base)
+            item.setToolTip(p)  # show absolute path on hover
+            item.setData(Qt.ItemDataRole.UserRole, p)  # store absolute path
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             item.setCheckState(Qt.CheckState.Checked if p in filtered_set else Qt.CheckState.Unchecked)
             self.python_file_list.addItem(item)
-        self.python_file_list.setVisible(bool(all_paths))
+        self.python_file_list.setVisible(True)
     except Exception as e:
         print(f"{e}")
 def _populate_list_view(self) -> None:
@@ -31,7 +39,8 @@ def _populate_list_view(self) -> None:
 def copy_raw(self):
     chunks = []
     for _, info in self.combined_text_lines.items():
-        body = info['text'][1] if isinstance(info['text'], list) else info['text']
+        txt = info.get('text')
+        body = txt[1] if isinstance(txt, list) else str(txt or "")
         chunks.append(body)
     QtWidgets.QApplication.clipboard().setText("\n\n".join(chunks))
     self.status.setText("✅ Copied RAW bodies to clipboard")

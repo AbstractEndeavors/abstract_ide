@@ -1,5 +1,5 @@
-from abstract_utilities.robust_readers import *
-apply_inits(root=get_caller_dir(1))
+from abstract_utilities.path_utils.req import *
+get_for_all_tabs()
 from .main import *
 def startIdeConsole():
     startConsole(ideTab)
