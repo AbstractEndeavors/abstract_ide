@@ -18,6 +18,7 @@ src/abstract_ide/console_utils/log_manager.py
 src/abstract_ide/console_utils/startConsole.py
 src/abstract_ide/console_utils/worker_scans.py
 src/abstract_ide/consoles/__init__.py
+src/abstract_ide/consoles/fun_it.py
 src/abstract_ide/consoles/main.py
 src/abstract_ide/consoles/start_gui.py
 src/abstract_ide/consoles/apiTab/__init__.py
