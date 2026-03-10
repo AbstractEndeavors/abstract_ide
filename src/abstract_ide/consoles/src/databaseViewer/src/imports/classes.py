@@ -544,13 +544,13 @@ class NotifyStreamWorker(QObject):
         self.status_changed.emit("stopped")
     
     def _listen_loop(self) -> None:
-        """Main listen loop using raw psycopg2 connection"""
+        """Main listen loop using raw psycopg connection"""
         import select
-        import psycopg2
+        import psycopg
         import json
         
         try:
-            conn = psycopg2.connect(self.db_config.url)
+            conn = psycopg.connect(self.db_config.url)
             conn.set_isolation_level(0)  # Autocommit for LISTEN
             cursor = conn.cursor()
             

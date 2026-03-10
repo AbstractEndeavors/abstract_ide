@@ -24,9 +24,15 @@ URL_KEY = "DB_DSN_POSTGRESQL_URL"
 if os.path.isdir('/home/flerb'):
     URL_KEY = "DB_DSN_POSTGRESQL_URL_REMOTE"
 DB_DSN = get_env_value(URL_KEY,env_loc)
-FILTERS = get_env_value('FILTERS',env_loc).replace('>',' ').split(',')
-MEDIA_TYPE = get_env_value('MEDIA_TYPE',env_loc).replace('>',' ')
-USER = get_env_value('USER',env_loc).replace('>',' ')
+FILTERS = get_env_value('FILTERS',env_loc)
+if FILTERS:
+    FILTERS = FILTERS.replace('>',' ').split(',')
+MEDIA_TYPE = get_env_value('MEDIA_TYPE',env_loc)
+if MEDIA_TYPE:
+    MEDIA_TYPE = MEDIA_TYPE.replace('>',' ')
+USER = get_env_value('USER',env_loc)
+if USER:
+    USER = USER.replace('>',' ')
 ENV_PATH = get_env_value("ABSTRACT_IDE_ENV_PATH")
 BASE_URL = get_env_value("ABSTRACT_IDE_DB_BASE_URL",path=ENV_PATH) or 'https://k2s.cc/file/'
 TARGET_DOMAIN = get_env_value("ABSTRACT_IDE_DB_TARGET_DOMAIN",path=ENV_PATH) or 'https://k2s.cc'

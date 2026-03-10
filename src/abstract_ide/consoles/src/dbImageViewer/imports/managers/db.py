@@ -1,8 +1,6 @@
 
 # managers/db.py
-import psycopg2
-import psycopg2.extras
-from psycopg2 import pool
+from psycopg_pool import pool
 from dataclasses import dataclass, asdict
 
 from ..src import *
@@ -39,7 +37,7 @@ class DownloadRegistry(metaclass=SingletonMeta):
     def _execute(self, query: str, params=None, fetch: bool = False):
         conn = self._pool.getconn()
         try:
-            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            with conn.cursor(cursor_factory=psycopg.extras.RealDictCursor) as cur:
                 cur.execute(query, params)
                 result = cur.fetchall() if fetch else None
             conn.commit()
