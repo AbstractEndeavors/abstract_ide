@@ -1,5 +1,5 @@
 from .apiConsole import apiConsole
-from .clipit import clipit
+from .clipit import ClipIt
 from .finderConsole import finderConsole
 from .logConsole import logConsole
 from .appRunner import appRunner
@@ -24,7 +24,7 @@ class ideConsole(ConsoleBase):
         inner.addTab(finderConsole(),   "Finder")
         inner.addTab(apiConsole(),   "Api")
         inner.addTab(databaseViewer(),   "databaseViewer")
-        inner.addTab(clipit(),   "Clipit")
+        inner.addTab(ClipIt(),   "Clipit")
         inner.addTab(webPardner(),   "Web Pardner")
         inner.addTab(windowManager(),   "Window Mgr")
         inner.addTab(appRunner(),   "app runner")

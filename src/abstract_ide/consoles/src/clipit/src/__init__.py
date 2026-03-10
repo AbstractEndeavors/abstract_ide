@@ -1,1 +1,1 @@
-from abstract_clipit import clipitTab as clipit
+from abstract_clipit import ClipIt

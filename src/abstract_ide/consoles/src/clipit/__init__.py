@@ -1,1 +1,1 @@
-from .src import clipit
+from .src import ClipIt
