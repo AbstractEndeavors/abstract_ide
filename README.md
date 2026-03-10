@@ -1,1 +1,317 @@
-# Abstract PDFs
+# Abstract IDE
+
+A modular, multi-console PyQt6 desktop IDE toolkit built around explicit wiring, schema-first design, and composable tab-based consoles. Each console is a self-contained tool that shares a common `SharedStateBus` for synchronized filter state across tabs.
+
+---
+
+## Overview
+
+`abstract_ide` is a collection of developer-facing GUI consoles built on PyQt6. Rather than a monolithic application, it is a registry of independently launchable consoles — each solving a specific workflow — unified under a single `ideConsole` shell when needed.
+
+### Included Consoles
+
+| Console | Description |
+|---|---|
+| **Finder Console** | Multi-tab file search, directory mapping, diff patching, scaffolding, and import extraction |
+| **React Runner** | Build runner, TypeScript/JS function inspector, React project analyzer |
+| **API Console** | API interaction tooling |
+| **Database Viewer** | Tabular database inspection |
+| **ClipIt** | File content clipboard manager with Python parsing |
+| **Web Pardner** | Browser/web tooling |
+| **Window Manager** | Desktop window management utilities |
+| **App Runner** | General application launcher |
+| **Image Tab** | Image viewer and management |
+| **DB Image Viewer** | Database-backed image viewer |
+| **Log Console** | Unified live log viewer |
+
+---
+
+## Architecture
+
+### Design Principles
+
+This codebase is built around four explicit commitments:
+
+- **Queues over callbacks** — workers emit to signals; UI never blocks
+- **Registries over globals** — `FileRegistry`, `SharedStateBus`, and `initFuncs` patterns replace module-level state
+- **Schemas over ad-hoc objects** — `@dataclass` types (`FileEntry`, `Config`, `Hunk`, `ApplyReport`, `SearchParams`) define all data contracts
+- **Explicit environment wiring** — no "smart defaults" that hide dependencies; every connection is named
+
+### SharedStateBus
+
+All tabs within a console share a `SharedStateBus` — a `QObject`-based signal broker that synchronizes filter state (directory, extensions, patterns, flags) across linked tabs. Tabs can opt out by toggling "Independent" mode.
+
+```python
+class SharedStateBus(QObject):
+    stateBroadcast = pyqtSignal(object, dict)  # (sender, state_dict)
+```
+
+### `initFuncs` Pattern
+
+Each tab/console uses a loader that binds free functions as instance methods at construction time, keeping class definitions thin and functions independently testable:
+
+```python
+def initFuncs(self):
+    for f in (start_search, populate_results, append_log, open_one):
+        setattr(self, f.__name__, f)
+    return self
+```
+
+### ConsoleBase
+
+All top-level consoles inherit from `ConsoleBase` (from `abstract_gui`), which provides a `QMainWindow`-compatible shell with a shared bus and layout entry point.
+
+---
+
+## Finder Console
+
+The primary file operations console. Launched via `startFinderConsole()` or embedded as a tab.
+
+### Tabs
+
+#### Find Content
+Full-text file search with string matching, line extraction, and result list. Runs in a `QThread` worker. Double-click results to open in editor.
+
+**Filters available:**
+- Directory path (with SFTP/GVFS resolution)
+- Search strings (comma-separated)
+- Allowed/excluded extensions, types, directories, patterns
+- Recursive toggle, spec line, parse lines, get lines
+
+#### Directory Map
+Generates a visual directory tree as a list. Supports copy-to-clipboard, save-to-file, and context menu operations.
+
+#### Diff (Repo)
+Paste a unified diff, match hunks against files in the configured directory, preview the patched result, and apply to single or multiple files with optional backup.
+
+**Key behaviors:**
+- Tolerant unified diff parser (works with or without `@@` headers)
+- Per-file apply/overwrite checkboxes in results tree
+- `save_all_checked()` applies diff to all checked files with `.bak` backup option
+
+#### Scaffolder
+Paste `tree`-style directory structure text, parse it into `TreeNode` schemas, create the file/folder structure on disk, and edit file contents inline.
+
+Uses:
+- `TreeParser` — converts tree text to `TreeNode` dataclass graph
+- `ScaffoldBuilder` — queue-based disk writer
+- `FileRegistry` — central in-memory registry with dirty-tracking and listeners
+
+#### Extract Python Imports
+Scans Python files, extracts all imports, displays as filterable "chips". Clicking an import filters the file list to files containing that import.
+
+---
+
+## React Runner
+
+TypeScript/JavaScript project tooling. Three tabs:
+
+### react Runner Tab
+- Runs `yarn`/`pnpm`/`npm build` via `QProcess` (non-blocking)
+- Streams output live to log view
+- Parses build errors/warnings into grouped tree views (by file, with line/col)
+- Embedded code editor with highlight-on-click, save, and revert
+- Alt-extension resolution (`.ts` → `.tsx` etc.)
+
+### Functions Tab
+- Scans a base path for exported TypeScript/JS functions
+- Three modes: **Packages** (dist/index introspection), **Functions folder** (static scan), **React project** (configurable subdir)
+- Uses `@babel/parser` + `@babel/traverse` for static analysis; falls back to regex
+- Displays function chips with filter; clicking shows export/import locations
+- Tracks both functions and variables with separate filter groups
+
+### Test Runner Tab (reactTab)
+- Browse packages under a configurable root
+- Select and call exported functions interactively with typed argument inputs
+- Executes via `tsx` through NVM-resolved Node.js
+- Raw JSON args override available
+
+---
+
+## Installation
+
+### Requirements
+
+- Python 3.10+
+- PyQt6
+- Node.js (for React Runner — resolved via NVM automatically)
+
+```bash
+pip install abstract-ide
+```
+
+Or from source:
+
+```bash
+git clone https://github.com/AbstractEndeavors/abstract-ide
+cd abstract-ide
+pip install -e .
+```
+
+### Dependencies
+
+```
+PyQt6
+abstract_gui
+abstract_utilities
+abstract_react
+abstract_apis
+abstract_paths
+```
+
+---
+
+## Usage
+
+### Launch the full IDE shell
+
+```python
+from abstract_ide.consoles import ideConsole
+ideConsole.start()
+```
+
+### Launch individual consoles
+
+```python
+from abstract_ide.consoles.finderConsole import finderConsole
+finderConsole.start()
+
+from abstract_ide.consoles.reactRunner import reactRunner
+reactRunner.start()
+```
+
+### Embed a console as a tab
+
+```python
+from abstract_ide.consoles.finderConsole.src.tabs.main import finderConsole
+from abstract_ide.consoles.reactRunner.src.main import reactRunner
+
+inner = QTabWidget()
+inner.addTab(finderConsole(), "Finder")
+inner.addTab(reactRunner(),   "React")
+```
+
+### Use individual finder tabs directly
+
+```python
+from abstract_ide.consoles.finderConsole.src.tabs.finderTab import finderTab
+from abstract_ide.consoles.finderConsole.src.imports.share_utils.shared.inputs import SharedStateBus
+
+bus = SharedStateBus()
+tab = finderTab(bus)
+```
+
+---
+
+## Directory Structure
+
+```
+abstract_ide/
+├── src/
+│   └── abstract_ide/
+│       └── consoles/
+│           ├── src/
+│           │   ├── main.py                    # ideConsole — top-level shell
+│           │   ├── finderConsole/
+│           │   │   ├── src/
+│           │   │   │   ├── tabs/
+│           │   │   │   │   ├── main.py        # finderConsole tab container
+│           │   │   │   │   ├── finderTab/     # full-text search
+│           │   │   │   │   ├── directoryMapTab/
+│           │   │   │   │   ├── diffParserTab/
+│           │   │   │   │   ├── scaffolder/
+│           │   │   │   │   ├── collectFilesTab/
+│           │   │   │   │   └── extractImportsTab/
+│           │   │   │   └── imports/
+│           │   │   │       └── share_utils/
+│           │   │   │           └── shared/
+│           │   │   │               ├── inputs.py        # install_common_inputs, SharedStateBus
+│           │   │   │               ├── states/          # read_state / write_state
+│           │   │   │               ├── results/         # make_params, browse_dir
+│           │   │   │               └── visibility/      # visibilityMgr (collapsible sections)
+│           │   └── reactRunner/
+│           │       └── src/
+│           │           ├── main.py            # reactRunner tab container
+│           │           ├── runnerTab/         # build runner + error tree + editor
+│           │           ├── functionsTab/      # JS/TS function inspector
+│           │           │   ├── flowLayout/    # wrapping chip layout
+│           │           │   └── functionsTab/
+│           │           │       └── functions/ # scan, filter, render, log utils
+│           │           ├── reactTab/          # interactive function caller
+│           │           └── imports/
+│           │               ├── constants.py
+│           │               ├── imports.py
+│           │               └── ext_funcs/
+│           │                   ├── node_resolver.py   # NVM-aware Node/tsx finder
+│           │                   └── path_inputs.py     # validated QLineEdit helpers
+├── setup.py
+├── setup.cfg
+├── pyproject.toml
+└── README.md
+```
+
+---
+
+## Key Modules
+
+### `SharedStateBus`
+Signal broker for synchronized filter state across tabs. Tabs push state on change; linked tabs receive and apply it silently (via `QSignalBlocker`).
+
+### `install_common_inputs`
+Single-call function that wires a full filter form (directory, strings, 8 filter fields, flags, spec_line) into any `QWidget` host and connects it to a `SharedStateBus`.
+
+### `visibilityMgr`
+Collapsible section manager using `QPropertyAnimation` on `maximumHeight`. Persists open/closed state via `QSettings`. No `adjustSize()` calls — flicker-free.
+
+### `runSubProcess` / `node_resolver`
+NVM-aware subprocess runner. Resolves `node`, `npm`, `npx`, `tsx` across PATH, common dirs, NVM installations, and login shell fallback. Injects correct `PATH` and `NODE_PATH` into subprocess environment.
+
+### `parse_unified_diff`
+Tolerant unified diff parser. Works with or without `@@` headers. Returns `List[Hunk]` where each hunk carries `subs` (lines to match) and `adds` (lines to insert).
+
+### `getPaths`
+Finds exact contiguous string matches across a list of files. Returns `(unique_files, found_paths)` with line-level metadata for each match.
+
+### `TreeParser` / `ScaffoldBuilder` / `FileRegistry`
+Scaffolding pipeline. `TreeParser` converts `tree`-style text to `TreeNode` graphs. `ScaffoldBuilder` uses a `deque` queue for ordered disk creation. `FileRegistry` tracks all created files with dirty state and listener callbacks.
+
+---
+
+## Development
+
+### Running from source
+
+```bash
+git clone https://github.com/AbstractEndeavors/abstract-ide
+cd abstract-ide
+pip install -e ".[dev]"
+python -m abstract_ide
+```
+
+### Building for PyPI
+
+```bash
+python -m build
+twine upload dist/*
+```
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-console`)
+3. Follow existing patterns: `initFuncs`, `@dataclass` schemas, `QThread` workers
+4. Submit a pull request
+
+---
+
+## License
+
+MIT License. See `LICENSE` for details.
+
+---
+
+## Contact
+
+**Abstract Endeavors**
+`partners@abstractendeavors.com`
+[https://github.com/AbstractEndeavors](https://github.com/AbstractEndeavors)
