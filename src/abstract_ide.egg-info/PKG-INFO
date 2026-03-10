@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: abstract_ide
-Version: 0.0.0.375
+Version: 0.0.0.376
 Summary: abstract_ide
 Home-page: https://github.com/AbstractEndeavors/abstract_ide
 Author: putkoff
@@ -25,6 +25,7 @@ Requires-Dist: abstract_react
 Requires-Dist: webdriver_manager
 Requires-Dist: scipy
 Requires-Dist: aiohttp
+Requires-Dist: psycopg_pool
 Dynamic: author
 Dynamic: author-email
 Dynamic: classifier

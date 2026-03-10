@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 setuptools.setup(
     name='abstract_ide',
-    version='0.0.0.375',
+    version='0.0.0.376',
     author='putkoff',
     author_email='partners@abstractendeavors.com',
     description='abstract_ide',
@@ -31,7 +31,8 @@ setuptools.setup(
         'abstract_react',
         'webdriver_manager',
         'scipy',
-        'aiohttp'
+        'aiohttp',
+        'psycopg_pool'
         ]
 ,
    package_dir={"": "src"},

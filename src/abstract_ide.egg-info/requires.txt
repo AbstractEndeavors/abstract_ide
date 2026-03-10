@@ -11,3 +11,4 @@ abstract_react
 webdriver_manager
 scipy
 aiohttp
+psycopg_pool
