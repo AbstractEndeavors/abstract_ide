@@ -1,5 +1,4 @@
 abstract_apis
-PyQt5
 abstract_webtools
 abstract_utilities
 abstract_gui
@@ -8,3 +7,7 @@ abstract_clipit
 flask
 abstract_paths
 PyQt6
+abstract_react
+webdriver_manager
+scipy
+aiohttp

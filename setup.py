@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 setuptools.setup(
     name='abstract_ide',
-    version='0.0.0.352',
+    version='0.0.0.372',
     author='putkoff',
     author_email='partners@abstractendeavors.com',
     description='abstract_ide',
@@ -20,7 +20,6 @@ setuptools.setup(
     ],
     install_requires=[
         'abstract_apis',
-        'PyQt5',
         'abstract_webtools',
         'abstract_utilities',
         'abstract_gui',
@@ -28,7 +27,11 @@ setuptools.setup(
         'abstract_clipit',
         'flask',
         'abstract_paths',
-        'PyQt6'
+        'PyQt6',
+        'abstract_react',
+        'webdriver_manager',
+        'scipy',
+        'aiohttp'
         ]
 ,
    package_dir={"": "src"},

@@ -1,1 +1,1 @@
-error TS5058: The specified path does not exist: 'tsconfig.json'.
+/bin/sh: 1: npx: not found
