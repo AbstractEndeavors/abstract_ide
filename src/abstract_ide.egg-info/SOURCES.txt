@@ -243,6 +243,14 @@ src/abstract_ide/consoles/src/windowManager/__init__.py
 src/abstract_ide/consoles/src/windowManager/main.py
 src/abstract_ide/consoles/src/windowManager/src/__init__.py
 src/abstract_ide/consoles/src/windowManager/src/main.py
+src/abstract_ide/consoles/src/windowManager/src/functions/__init__.py
+src/abstract_ide/consoles/src/windowManager/src/functions/build_ui.py
+src/abstract_ide/consoles/src/windowManager/src/functions/command_utils.py
+src/abstract_ide/consoles/src/windowManager/src/functions/core_utils.py
+src/abstract_ide/consoles/src/windowManager/src/functions/file_utils.py
+src/abstract_ide/consoles/src/windowManager/src/functions/imports.py
+src/abstract_ide/consoles/src/windowManager/src/functions/update_utils.py
+src/abstract_ide/consoles/src/windowManager/src/functions/wmctrl_utils.py
 src/abstract_ide/consoles/src/windowManager/src/imports/__init__.py
 src/abstract_ide/consoles/src/windowManager/src/imports/funcs/__init__.py
 src/abstract_ide/consoles/src/windowManager/src/imports/funcs/funcs.py
@@ -251,9 +259,10 @@ src/abstract_ide/consoles/src/windowManager/src/imports/funcs/platform_utils.py
 src/abstract_ide/consoles/src/windowManager/src/imports/funcs/selection_utils.py
 src/abstract_ide/consoles/src/windowManager/src/imports/funcs/window_utils.py
 src/abstract_ide/consoles/src/windowManager/src/imports/src/__init__.py
-src/abstract_ide/consoles/src/windowManager/src/imports/src/constants.py
 src/abstract_ide/consoles/src/windowManager/src/imports/src/init_imports.py
-src/abstract_ide/consoles/src/windowManager/src/imports/src/pyqt_imports.py
+src/abstract_ide/consoles/src/windowManager/src/imports/src/QtGuiImports/__init__.py
+src/abstract_ide/consoles/src/windowManager/src/imports/src/QtGuiImports/constants.py
+src/abstract_ide/consoles/src/windowManager/src/imports/src/QtGuiImports/pyqt_imports.py
 tests/test.py
 tests/testGui.py
 tests/testPyQt.py

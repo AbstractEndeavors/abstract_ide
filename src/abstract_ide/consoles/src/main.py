@@ -29,7 +29,7 @@ class ideConsole(ConsoleBase):
         inner.addTab(windowManager(),   "Window Mgr")
         inner.addTab(appRunner(),   "app runner")
         inner.addTab(imageTab(),   "Images")
-        inner.addTab(DbImageViewer(),   "dbImageViewer")
+        #inner.addTab(DbImageViewer(),   "dbImageViewer")
         inner.addTab(logConsole(),   "logs")
         
     def start():

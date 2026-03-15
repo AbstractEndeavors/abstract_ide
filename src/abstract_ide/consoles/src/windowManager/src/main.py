@@ -1,8 +1,18 @@
 from .imports import *
+from .functions import *
 # -----------------------------------------------------------------------------
 #  main application ------------------------------------------------------------
 # -----------------------------------------------------------------------------
-class windowManager(QMainWindow):
+class windowManager(
+    WmctrlUtilsMixin,
+    UpdateUtilsMixin,
+    CoreUtilsMixin,
+    FileUtilsMixin,
+    CommandUtilsMixin,
+    BuildUiMixin,
+    lazy_import("PyQt6.QtWidgets", "QMainWindow")
+    ):
+    
     COLS = ["Window ID", "Title", "PID", "Monitor", "Type", "Selected?"]
     def __init__(self) -> None:
         super().__init__()
@@ -18,4 +28,5 @@ class windowManager(QMainWindow):
         self.refresh()
         
     def start():
+        startConsole = lazy_import("abstract_gui", "startConsole")
         startConsole(windowManager)
