@@ -3,15 +3,15 @@ from .functions import *
 # -----------------------------------------------------------------------------
 #  main application ------------------------------------------------------------
 # -----------------------------------------------------------------------------
-class windowManager(
-    WmctrlUtilsMixin,
+class WindowManager(
+    BuildUiMixin,
     UpdateUtilsMixin,
     CoreUtilsMixin,
     FileUtilsMixin,
     CommandUtilsMixin,
-    BuildUiMixin,
-    lazy_import("PyQt6.QtWidgets", "QMainWindow")
-    ):
+    WmctrlUtilsMixin,
+    QMainWindow
+):
     
     COLS = ["Window ID", "Title", "PID", "Monitor", "Type", "Selected?"]
     def __init__(self) -> None:
@@ -29,4 +29,4 @@ class windowManager(
         
     def start():
         startConsole = lazy_import("abstract_gui", "startConsole")
-        startConsole(windowManager)
+        startConsole(WindowManager)

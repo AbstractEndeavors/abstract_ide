@@ -1,2 +1,2 @@
-from src import windowManager
-windowManager.start()
+from src import WindowManager
+WindowManager.start()

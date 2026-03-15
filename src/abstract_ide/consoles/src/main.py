@@ -4,7 +4,7 @@ from .finderConsole import finderConsole
 from .logConsole import logConsole
 from .appRunner import appRunner
 from .reactRunner import *
-from .windowManager import windowManager
+from .windowManager import WindowManager
 from .webPardner import webPardner
 from .databaseViewer import databaseViewer
 from .imageTab import startImageConsole, imageTab
@@ -26,7 +26,7 @@ class ideConsole(ConsoleBase):
         inner.addTab(databaseViewer(),   "databaseViewer")
         inner.addTab(ClipIt(),   "Clipit")
         inner.addTab(webPardner(),   "Web Pardner")
-        inner.addTab(windowManager(),   "Window Mgr")
+        inner.addTab(WindowManager(),   "Window Mgr")
         inner.addTab(appRunner(),   "app runner")
         inner.addTab(imageTab(),   "Images")
         #inner.addTab(DbImageViewer(),   "dbImageViewer")

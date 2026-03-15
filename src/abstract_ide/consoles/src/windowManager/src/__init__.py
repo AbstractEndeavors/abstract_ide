@@ -1,1 +1,1 @@
-from .main import windowManager
+from .main import WindowManager
