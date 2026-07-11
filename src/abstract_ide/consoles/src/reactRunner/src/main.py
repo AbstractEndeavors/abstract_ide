@@ -12,7 +12,7 @@ class reactRunner(ConsoleBase):
         # all content tabs share THIS console’s bus
         inner.addTab(runnerTab(),      "react Runner")
         inner.addTab(functionsTab(),   "Functions")
-        inner.addTab(reactTab(),   "Test Runner")
+##        inner.addTab(reactTab(),   "Test Runner")
         
         #add_logs_tab(inner, title="Logs")   # << auto-attaches to the same logger pipe
         #self._logs_view = add_logs_to(self)   # adds a Show/Hide Logs bar + panel

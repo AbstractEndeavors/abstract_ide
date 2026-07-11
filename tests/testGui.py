@@ -1,3 +1,3 @@
-from imports import *
+from abstract_ide import *
 
-reactRunnerTab
+startIdeConsole()
