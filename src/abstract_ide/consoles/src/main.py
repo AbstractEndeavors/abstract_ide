@@ -9,6 +9,7 @@ from .webPardner import webPardner
 from .databaseViewer import databaseViewer
 from .imageTab import startImageConsole, imageTab
 from .dbImageViewer import startDbImageConsole,DbImageViewer
+from .servicesTab import servicesTab
 from abstract_gui.QT6 import QTabWidget,QMainWindow
 from abstract_gui.QT6.utils.console_utils import ConsoleBase
 from abstract_gui.QT6.utils.console_utils import startConsole
@@ -20,15 +21,19 @@ class ideConsole(ConsoleBase):
         inner = QTabWidget()
         self.layout().addWidget(inner)
         # all content tabs share THIS console’s bus
+        # RECOVERED 2026-07-11: reactTab functions/ (funcs/fuck/solo_funcs) rebuilt from orphaned .pyc.
+        # Engine reconstructed from bytecode (Babel/ESM/tsx JS is verbatim; Python flow is best-effort);
+        # reload_all/update_topbar_visibility are load-guarded so the tab always opens.
         inner.addTab(reactRunner(),      "react Runner")
         inner.addTab(finderConsole(),   "Finder")
         inner.addTab(apiConsole(),   "Api")
-        inner.addTab(databaseViewer(),   "databaseViewer")
+        inner.addTab(databaseViewer(),   "databaseViewer")   # FIXED 2026-07-11: functions/ recovered from .pyc
         inner.addTab(ClipIt(),   "Clipit")
-        inner.addTab(webPardner(),   "Web Pardner")
+        inner.addTab(webPardner(),   "Web Pardner")   # RECOVERED 2026-07-11: functions/initialize.py rebuilt from .pyc
         inner.addTab(WindowManager(),   "Window Mgr")
         inner.addTab(appRunner(),   "app runner")
         inner.addTab(imageTab(),   "Images")
+        inner.addTab(servicesTab(),   "Services")   # ADDED 2026-07-11: PyQt6 port of abstract_parallels services_mgr
         #inner.addTab(DbImageViewer(),   "dbImageViewer")
         inner.addTab(logConsole(),   "logs")
         
