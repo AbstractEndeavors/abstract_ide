@@ -18,6 +18,7 @@ import json
 import os
 import shlex
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
@@ -166,10 +167,110 @@ def gather_stray_context(run_sudo, item):
             % (item.get("name"), pid, facts, ps_line.strip(), links.strip(), cmdline.strip()[:1000]))
 
 
+# ─────────────────────── endpoint route resolution ────────────────────────
+# Resolve the chat + models URLs for a configured base. A hugpy host advertises
+# a route table at <origin>/endpoints, but it lists routes WITHOUT the /api
+# blueprint prefix under which the real JSON API is actually served (the bare
+# /v1/... GET is shadowed by the frontend SPA). So we discover the route *shape*
+# from /endpoints, then PROBE candidate URLs (with and without /api) and keep the
+# one that actually returns a model list. A plain llama.cpp/Ollama/cloud server
+# has no /endpoints — its base + the OpenAI /v1 convention is probed directly.
+# Provider-neutral, and cached per base so the probe cost is paid once.
+_ROUTE_CACHE = {}   # base -> (chat_url, models_url)
+
+
+def _origin(url):
+    p = urllib.parse.urlsplit(url)
+    if p.scheme and p.netloc:
+        return "%s://%s" % (p.scheme, p.netloc)
+    return url.rstrip("/")
+
+
+def _conv(base):
+    """OpenAI /v1 convention (chat_url, models_url) for a base."""
+    return (base + ("/chat/completions" if base.endswith("/v1") else "/v1/chat/completions"),
+            base + ("/models" if base.endswith("/v1") else "/v1/models"))
+
+
+def _endpoints_paths(base, api_key="", timeout=4):
+    """Route paths (models_path, chat_path) from a /endpoints table, or None."""
+    origin = _origin(base)
+    headers = {}
+    if api_key:
+        headers["Authorization"] = "Bearer %s" % api_key
+    for ep in (origin + "/endpoints", origin + "/api/endpoints"):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(ep, headers=headers),
+                                        timeout=timeout) as resp:
+                data = json.loads(resp.read().decode(errors="replace"))
+        except Exception:
+            continue
+        if not isinstance(data, list):
+            continue
+        chat = models = None
+        for e in data:
+            u = (e.get("url") or "").rstrip("/")
+            methods = e.get("methods") or []
+            if "<" in u:                               # skip templated routes
+                continue
+            if u.endswith("/chat/completions") and "POST" in methods:
+                if chat is None or "/v1/" in u:
+                    chat = u
+            elif u.endswith("/models") and "GET" in methods and "/llm/" not in u:
+                if models is None or "/v1/" in u:
+                    models = u
+        if chat and models:
+            return models, chat
+    return None
+
+
+def _models_url_ok(url, api_key="", timeout=4):
+    """True if url returns an OpenAI-style model list (dict with data/models)."""
+    headers = {}
+    if api_key:
+        headers["Authorization"] = "Bearer %s" % api_key
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers=headers),
+                                    timeout=timeout) as resp:
+            data = json.loads(resp.read().decode(errors="replace"))
+        return isinstance(data, dict) and bool(data.get("data") or data.get("models"))
+    except Exception:
+        return False
+
+
+def resolve_routes(base, api_key="", timeout=4):
+    """(chat_url, models_url) for a base. Discovers the route shape from
+    /endpoints when present, probes /api-prefixed and bare candidates plus the
+    plain /v1 convention, and keeps the models URL that actually responds.
+    Cached per base."""
+    base = base.rstrip("/")
+    if base in _ROUTE_CACHE:
+        return _ROUTE_CACHE[base]
+    origin = _origin(base)
+    conv_chat, conv_models = _conv(base)
+    # (models_url, chat_url) candidates, most-likely first.
+    candidates = []
+    disc = _endpoints_paths(base, api_key, timeout)
+    if disc:
+        mp, cp = disc                                  # e.g. /v1/models, /v1/chat/completions
+        candidates.append((origin + "/api" + mp, origin + "/api" + cp))  # hugpy real mount
+        candidates.append((origin + mp, origin + cp))                    # bare
+    candidates.append((conv_models, conv_chat))        # OpenAI convention on the base
+    seen = set()
+    for models_url, chat_url in candidates:
+        if models_url in seen:
+            continue
+        seen.add(models_url)
+        if _models_url_ok(models_url, api_key, timeout):
+            _ROUTE_CACHE[base] = (chat_url, models_url)
+            return _ROUTE_CACHE[base]
+    _ROUTE_CACHE[base] = (conv_chat, conv_models)      # nothing responded — use convention
+    return _ROUTE_CACHE[base]
+
+
 def llm_list_models(llm_api, api_key="", timeout=10):
-    """GET /v1/models from an OpenAI-compatible server; returns chat-capable ids."""
-    base = llm_api.rstrip("/")
-    url = base + ("/models" if base.endswith("/v1") else "/v1/models")
+    """List chat-capable model ids from a server's models route (see resolve_routes)."""
+    _, url = resolve_routes(llm_api, api_key)
     headers = {}
     if api_key:
         headers["Authorization"] = "Bearer %s" % api_key
@@ -210,8 +311,7 @@ def llm_analyze(llm_api, context, kind, api_key="", model="", timeout=None,
     deep=False appends /no_think for a fast, direct answer."""
     if timeout is None:
         timeout = LLM_TIMEOUT
-    base = llm_api.rstrip("/")
-    url = base + ("/chat/completions" if base.endswith("/v1") else "/v1/chat/completions")
+    url, _ = resolve_routes(llm_api, api_key)
     payload = {
         "model": model or "default",
         "messages": [{"role": "user",
@@ -267,8 +367,7 @@ def llm_stream(llm_api, messages, api_key="", model="", timeout=None,
         timeout = LLM_TIMEOUT
     if max_tokens is None:
         max_tokens = LLM_MAX_TOKENS
-    base = llm_api.rstrip("/")
-    url = base + ("/chat/completions" if base.endswith("/v1") else "/v1/chat/completions")
+    url, _ = resolve_routes(llm_api, api_key)
     payload = {
         "model": model or "default",
         "messages": messages,
@@ -736,6 +835,8 @@ class servicesTab(QWidget):
         if self._models_fetcher and self._models_fetcher.isRunning():
             return
         endpoint = self.current_llm_api()
+        # Re-probe /endpoints for this base (a manual refresh drops the cache).
+        _ROUTE_CACHE.pop(endpoint.rstrip("/"), None)
         self._models_fetcher = ModelsThread(endpoint, api_key=self.current_key(),
                                             parent=self)
         self._models_fetcher.models.connect(self._on_models)
