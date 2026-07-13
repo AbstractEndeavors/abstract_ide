@@ -90,7 +90,7 @@ def _default_api_key():
 # vision) work out of the box on this fleet without per-machine config. Still
 # fully overridable via LLM_API_BASE / ~/.config/services_tab/endpoint for a
 # different backend. Bare host — resolve_routes() finds the real /api/v1 routes.
-_HUB_DEFAULT = "https://dev.hugpy.ai"
+_HUB_DEFAULT = "https://dev.hugpy.ai/api/v1"   # explicit /api/v1 (bare host is SPA-shadowed)
 _LOCAL_DEFAULTS = ["http://localhost:8081/v1",    # local llama-server
                    "http://localhost:8080/v1",    # llama.cpp stock port
                    "http://localhost:11434/v1"]   # Ollama
