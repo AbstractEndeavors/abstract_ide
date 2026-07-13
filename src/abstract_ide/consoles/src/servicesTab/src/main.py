@@ -86,17 +86,18 @@ def _default_api_key():
     return ""
 
 
-# Common local defaults so the dropdown is useful out of the box on a fresh
-# install; the user's own endpoint (from env) is prepended and selected. 8081
-# leads because that is where a local llama-server is commonly run here; 8080 is
-# llama.cpp's stock port and 11434 is Ollama.
-_LOCAL_DEFAULTS = ["http://localhost:8081/v1",    # local llama-server (primary)
+# Default endpoint = the hugpy hub, so LLM features (Services analysis, Wireframe
+# vision) work out of the box on this fleet without per-machine config. Still
+# fully overridable via LLM_API_BASE / ~/.config/services_tab/endpoint for a
+# different backend. Bare host — resolve_routes() finds the real /api/v1 routes.
+_HUB_DEFAULT = "https://dev.hugpy.ai"
+_LOCAL_DEFAULTS = ["http://localhost:8081/v1",    # local llama-server
                    "http://localhost:8080/v1",    # llama.cpp stock port
                    "http://localhost:11434/v1"]   # Ollama
 LLM_API_DEFAULT = (_first_env("LLM_API_BASE", "HUGPY_LLM_API")
-                   or _config_val("endpoint") or _LOCAL_DEFAULTS[0])
+                   or _config_val("endpoint") or _HUB_DEFAULT)
 LLM_API_CHOICES = list(dict.fromkeys(         # dedup, preserve order
-    [LLM_API_DEFAULT]
+    [LLM_API_DEFAULT, _HUB_DEFAULT]
     + [c.strip() for c in _first_env("LLM_API_CHOICES").split(",") if c.strip()]
     + _LOCAL_DEFAULTS))
 LLM_API_KEY_DEFAULT = _default_api_key()

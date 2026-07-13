@@ -900,7 +900,7 @@ class wireframeTab(QWidget):
         try:
             self._html_view = html_import.render_qtwebengine(
                 path, (CANVAS_W, CANVAS_H),
-                on_done=self._apply_html_boxes, on_error=self._html_error, is_file=True)
+                on_done=self._apply_html_boxes, on_error=self._html_error, mode="file")
         except ImportError:
             QMessageBox.critical(self, "QtWebEngine required",
                                  "Rendering HTML needs PyQt6-WebEngine:\n\n"
@@ -930,10 +930,9 @@ class wireframeTab(QWidget):
         QMessageBox.critical(self, "Render failed", msg)
         self._restore_status()
 
-    # -- generate from a live URL (abstract_webtools render → real geometry) --
+    # -- generate from a live URL (rendered → real geometry) --
     def generate_from_url(self):
-        url, ok = QInputDialog.getText(self, "Generate from URL",
-                                       "Page URL (fetched + rendered via abstract_webtools):")
+        url, ok = QInputDialog.getText(self, "Generate from URL", "Page URL:")
         if not ok or not url.strip():
             return
         url = url.strip()
@@ -944,11 +943,30 @@ class wireframeTab(QWidget):
         except Exception as exc:
             QMessageBox.critical(self, "Import error", str(exc))
             return
-        self.status.setText("fetching + rendering %s …" % url)
-        self._url_thread = html_import.UrlImportThread(url, (CANVAS_W, CANVAS_H), parent=self)
-        self._url_thread.result.connect(self._apply_html_boxes)   # same box format
-        self._url_thread.error.connect(self._html_error)
-        self._url_thread.start()
+        # Prefer abstract_webtools' stealth render ONLY if a real system Chrome is
+        # present; otherwise (and on any failure) use QtWebEngine's BUNDLED Chromium
+        # — it ships with the pip dependency, so no system browser is required.
+        if html_import.chrome_available():
+            self.status.setText("fetching + rendering %s (abstract_webtools) …" % url)
+            self._url_thread = html_import.UrlImportThread(url, (CANVAS_W, CANVAS_H), parent=self)
+            self._url_thread.result.connect(self._apply_html_boxes)
+            self._url_thread.error.connect(lambda _m, u=url: self._url_qtwebengine(u))
+            self._url_thread.start()
+        else:
+            self._url_qtwebengine(url)
+
+    def _url_qtwebengine(self, url):
+        from . import html_import
+        self.status.setText("rendering %s (bundled browser) …" % url)
+        try:
+            self._html_view = html_import.render_qtwebengine(
+                url, (CANVAS_W, CANVAS_H),
+                on_done=self._apply_html_boxes, on_error=self._html_error, mode="url")
+        except ImportError:
+            QMessageBox.critical(self, "QtWebEngine required",
+                                 "Rendering needs PyQt6-WebEngine:\n\n"
+                                 "    pip install PyQt6-WebEngine")
+            self._restore_status()
 
     # -- generate from a screenshot (vision LLM, approximate) --
     def generate_from_screenshot(self):

@@ -82,11 +82,22 @@ def boxes_to_shapes(boxes, viewport, canvas, grid, max_shapes=60):
     return shapes
 
 
-def render_qtwebengine(source, viewport, on_done, on_error, is_file=True):
-    """Render HTML with QtWebEngine and hand the extracted boxes to on_done.
-    Returns the QWebEngineView, which the caller MUST keep referenced until
-    on_done fires (Qt would otherwise GC it mid-render). Lazy import so the tab
-    (and the whole IDE) still loads if PyQt6-WebEngine isn't installed."""
+def chrome_available():
+    """Is a real system Chrome/Chromium present (needed by abstract_webtools'
+    Selenium)? QtWebEngine's bundled Chromium doesn't count / isn't needed."""
+    import shutil
+    return any(shutil.which(b) for b in
+               ("google-chrome", "google-chrome-stable", "chromium",
+                "chromium-browser", "chrome"))
+
+
+def render_qtwebengine(source, viewport, on_done, on_error, mode="file"):
+    """Render with QtWebEngine's BUNDLED Chromium (ships with PyQt6-WebEngine —
+    no system browser needed) and hand the extracted boxes to on_done. mode is
+    'file' (local .html), 'url' (live page), or 'html' (raw string). Returns the
+    QWebEngineView, which the caller MUST keep referenced until on_done fires (Qt
+    would otherwise GC it mid-render). Lazy import so the tab (and the whole IDE)
+    still loads if PyQt6-WebEngine isn't installed."""
     from PyQt6.QtCore import QUrl, QTimer
     from PyQt6.QtWebEngineWidgets import QWebEngineView
 
@@ -116,8 +127,10 @@ def render_qtwebengine(source, viewport, on_done, on_error, is_file=True):
         QTimer.singleShot(350, lambda: page.runJavaScript(EXTRACT_JS, finish))
 
     page.loadFinished.connect(loaded)
-    if is_file:
-        view.load(QUrl.fromLocalFile(source))   # resolves relative CSS/img/JS
+    if mode == "url":
+        view.load(QUrl(source))                  # bundled Chromium fetches + renders
+    elif mode == "file":
+        view.load(QUrl.fromLocalFile(source))    # resolves relative CSS/img/JS
     else:
         view.setHtml(source)
     return view

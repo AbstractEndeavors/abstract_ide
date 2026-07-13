@@ -74,14 +74,19 @@ def llm_vision(chat_url, key, model, data_url, prompt=VISION_PROMPT,
                 data = json.loads(resp.read().decode(errors="replace"))
             return data["choices"][0]["message"]["content"]
         except urllib.error.HTTPError as exc:
-            last = "HTTP %d" % exc.code
             if exc.code in (500, 502, 503):      # cold-load / busy → wait + retry
+                last = "HTTP %d" % exc.code
                 time.sleep(12)
                 continue
-            raise
-        except Exception as exc:                 # transient network
-            last = str(exc)
-            time.sleep(8)
+            raise RuntimeError("vision endpoint %s returned HTTP %d" % (chat_url, exc.code))
+        except urllib.error.URLError as exc:
+            # connection refused / DNS / unreachable is NOT transient — fail fast
+            # with an actionable message rather than retrying for a minute.
+            raise RuntimeError(
+                "vision endpoint %s is unreachable (%s). Point it at a "
+                "vision-capable server via LLM_API_BASE or "
+                "~/.config/services_tab/endpoint (e.g. https://dev.hugpy.ai)."
+                % (chat_url, exc.reason))
     raise RuntimeError("vision request failed after retries: %s" % last)
 
 
