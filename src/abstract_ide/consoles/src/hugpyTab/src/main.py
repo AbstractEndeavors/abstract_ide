@@ -55,11 +55,13 @@ CHAT_LIKE = {"text-generation", "text2text-generation", "text-summarization",
              "image-text-to-text"}
 VISION_TASKS = {"image-text-to-text"}
 
-# Serving-state cell colours.
-_GREEN = QColor(205, 240, 205)
-_ORANGE = QColor(250, 232, 190)
-_GRAY = QColor(238, 238, 238)
-_RED = QColor(245, 205, 205)
+# Serving-state cell colours — saturated enough to read clearly on either a
+# light or dark table theme; paired with the dark ink text set on the cell.
+_GREEN = QColor(92, 194, 110)
+_ORANGE = QColor(240, 178, 70)
+_GRAY = QColor(176, 182, 188)
+_RED = QColor(226, 112, 112)
+_INK = QColor(22, 22, 22)
 
 
 def _tasks(m):
@@ -586,9 +588,12 @@ class hugpyTab(QWidget):
         e = self._serving.get(mk) or self._serving.get(m.get("name"))
         if not e:
             return ("—", _GRAY)
-        if e.get("always_on") or e.get("mode") == "static":
+        mode = str(e.get("mode") or "swap")
+        if e.get("always_on") or mode == "static":
             return ("always-on", _GREEN)
-        return (str(e.get("mode") or "swap"), _ORANGE)
+        if mode in ("off", "disabled", "none"):
+            return (mode, _GRAY)          # configured but not being served
+        return (mode, _ORANGE)
 
     def _populate_catalog(self):
         name_f = self.filter.text().strip().lower()
@@ -615,6 +620,7 @@ class hugpyTab(QWidget):
             text, color = self._serving_cell(m)
             sv = QTableWidgetItem(text)
             sv.setBackground(color)
+            sv.setForeground(_INK)
             self.catalog.setItem(i, 3, sv)
         self.catalog_count.setText("%d shown / %d total" % (len(rows), len(self._models)))
 
@@ -826,6 +832,7 @@ class hugpyTab(QWidget):
                 item = QTableWidgetItem(str(v))
                 if c == 6:
                     item.setBackground(_GREEN if healthy else _RED)
+                    item.setForeground(_INK)
                 self.workers.setItem(i, c, item)
         self.serving_tbl.setRowCount(0)
         self.serving_tbl.setRowCount(len(serving or []))
