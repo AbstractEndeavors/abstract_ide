@@ -11,6 +11,7 @@ from .imageTab import startImageConsole, imageTab
 from .dbImageViewer import startDbImageConsole,DbImageViewer
 from .servicesTab import servicesTab
 from .wireframeTab import wireframeTab
+from .hugpyTab import hugpyTab
 from abstract_gui.QT6 import QTabWidget,QMainWindow
 from abstract_gui.QT6.utils.console_utils import ConsoleBase
 from abstract_gui.QT6.utils.console_utils import startConsole
@@ -36,6 +37,7 @@ class ideConsole(ConsoleBase):
         inner.addTab(imageTab(),   "Images")
         inner.addTab(servicesTab(),   "Services")   # ADDED 2026-07-11: PyQt6 port of abstract_parallels services_mgr
         inner.addTab(wireframeTab(),   "Wireframe")   # ADDED 2026-07-13: snap-grid UI wireframe canvas
+        inner.addTab(hugpyTab(),   "Hugpy")   # ADDED 2026-07-13: hugpy fleet model-chat + catalog + fleet-health proxy
         #inner.addTab(DbImageViewer(),   "dbImageViewer")
         inner.addTab(logConsole(),   "logs")
         
