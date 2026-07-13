@@ -92,10 +92,12 @@ class ShapeItem(QGraphicsRectItem):
     """
     TYPE = QGraphicsRectItem.UserType + 1
 
-    def __init__(self, x, y, w, h, role="container", label=None, sid=None):
+    def __init__(self, x, y, w, h, role="container", label=None, code="", sid=None):
         super().__init__(0, 0, w, h)
         self.sid = sid
+        self.code = code                       # short auto placeholder shown on canvas
         self.role = role if role in ROLE_PALETTE else "container"
+        self.label = label if label else role_name(self.role)   # the real identifier
         self.setPos(x, y)
         self.setFlags(
             QGraphicsRectItem.GraphicsItemFlag.ItemIsMovable
@@ -103,9 +105,14 @@ class ShapeItem(QGraphicsRectItem):
             | QGraphicsRectItem.GraphicsItemFlag.ItemSendsGeometryChanges
         )
         self.setAcceptHoverEvents(True)
-        self._label = LabelItem(label if label is not None else role_name(self.role), self)
+        # On canvas we show the compact CODE (a, b, …) so long labels never
+        # overflow the boxes; the full label lives in the Legend key. The same
+        # text item is temporarily switched to the label while editing it.
+        self._text = LabelItem(self.code, self)
+        f = QFont(); f.setBold(True); f.setPointSize(11)
+        self._text.setFont(f)
         self._resizing = None          # handle name while resizing, else None
-        self._layout_label()
+        self._layout_text()
 
     def type(self):
         return ShapeItem.TYPE
@@ -118,14 +125,14 @@ class ShapeItem(QGraphicsRectItem):
     def set_size(self, w, h):
         self.prepareGeometryChange()
         self.setRect(0, 0, max(1, w), max(1, h))
-        self._layout_label()
+        self._layout_text()
 
-    def _layout_label(self):
+    def _layout_text(self):
         r = self.rect()
-        self._label.setTextWidth(max(20, r.width() - 8))
-        br = self._label.boundingRect()
-        self._label.setPos((r.width() - br.width()) / 2,
-                            (r.height() - br.height()) / 2)
+        self._text.setTextWidth(max(20, r.width() - 8))
+        br = self._text.boundingRect()
+        self._text.setPos((r.width() - br.width()) / 2,
+                          (r.height() - br.height()) / 2)
 
     def _grid(self):
         sc = self.scene()
@@ -141,21 +148,29 @@ class ShapeItem(QGraphicsRectItem):
             self.role = role
             self.update()
 
+    def set_label(self, text):
+        """Set the identifier from the Properties panel (canvas keeps the code)."""
+        self.label = text.strip() if text.strip() else role_name(self.role)
+
     def _commit_label(self, text):
+        """Called when inline label editing ends: store it, revert display to code."""
         text = text.strip()
-        if not text:
-            text = role_name(self.role)
-            self._label.setPlainText(text)
-        self._layout_label()
+        self.label = text if text else role_name(self.role)
+        self._text.setPlainText(self.code)     # back to the compact code
+        self._layout_text()
         sc = self.scene()
         if isinstance(sc, WireframeScene):
             sc.editEnded.emit()        # commit is undoable
+            sc.changed_notify()        # legend shows the label — refresh
 
     def edit_label(self):
+        """Double-click: temporarily show the full label for inline editing."""
         sc = self.scene()
         if isinstance(sc, WireframeScene):
             sc.editBegan.emit()        # snapshot before the edit so it's undoable
-        self._label.start_edit()
+        self._text.setPlainText(self.label)
+        self._layout_text()
+        self._text.start_edit()
 
     # -- snapping during move --
     def itemChange(self, change, value):
@@ -307,16 +322,17 @@ class ShapeItem(QGraphicsRectItem):
 
     # -- serialization --
     def to_dict(self):
-        return {"id": self.sid, "x": int(self.pos().x()), "y": int(self.pos().y()),
+        return {"id": self.sid, "code": self.code,
+                "x": int(self.pos().x()), "y": int(self.pos().y()),
                 "w": int(self.size()[0]), "h": int(self.size()[1]),
-                "role": self.role, "label": self._label.toPlainText(),
+                "role": self.role, "label": self.label,
                 "z": self.zValue()}
 
     @classmethod
     def from_dict(cls, d):
         it = cls(d.get("x", 0), d.get("y", 0), d.get("w", 120), d.get("h", 60),
                  role=d.get("role", "container"), label=d.get("label", ""),
-                 sid=d.get("id"))
+                 code=d.get("code", ""), sid=d.get("id"))
         it.setZValue(d.get("z", 0))
         return it
 
@@ -333,11 +349,36 @@ class WireframeScene(QGraphicsScene):
         self.snap = True
         self.grid_visible = True
         self._next_id = 1
+        self._next_code = 1        # 1->a, 2->b, ... 27->aa
 
     def new_id(self):
         sid = "s%d" % self._next_id
         self._next_id += 1
         return sid
+
+    @staticmethod
+    def _code_for(n):
+        """1-indexed integer -> spreadsheet-style letters (1=a, 26=z, 27=aa)."""
+        s = ""
+        while n > 0:
+            n, r = divmod(n - 1, 26)
+            s = chr(97 + r) + s
+        return s
+
+    @staticmethod
+    def _code_num(code):
+        n = 0
+        for ch in code:
+            if "a" <= ch <= "z":
+                n = n * 26 + (ord(ch) - 96)
+            else:
+                return 0
+        return n
+
+    def new_code(self):
+        code = self._code_for(self._next_code)
+        self._next_code += 1
+        return code
 
     def snap_point(self, pt):
         if not self.snap:
@@ -377,7 +418,7 @@ class WireframeScene(QGraphicsScene):
                 "canvas": {"w": int(self.sceneRect().width()), "h": int(self.sceneRect().height())},
                 "grid": {"size": self.grid_size, "snap": self.snap, "visible": self.grid_visible},
                 "shapes": [s.to_dict() for s in shapes],
-                "next_id": self._next_id}
+                "next_id": self._next_id, "next_code": self._next_code}
 
     def load(self, state):
         for it in self.shapes():
@@ -387,17 +428,22 @@ class WireframeScene(QGraphicsScene):
         self.snap = grid.get("snap", True)
         self.grid_visible = grid.get("visible", True)
         self._next_id = state.get("next_id", 1)
-        maxn = 0
+        self._next_code = state.get("next_code", 1)
+        maxn = maxc = 0
         for d in state.get("shapes", []):
             if not d.get("id"):
                 d["id"] = self.new_id()
+            if not d.get("code"):
+                d["code"] = self.new_code()    # backfill codes for old files
             it = ShapeItem.from_dict(d)
             self.addItem(it)
             try:
                 maxn = max(maxn, int(str(it.sid).lstrip("s")))
             except ValueError:
                 pass
+            maxc = max(maxc, self._code_num(it.code))
         self._next_id = max(self._next_id, maxn + 1)
+        self._next_code = max(self._next_code, maxc + 1)
         self.update()
         self.sceneChanged.emit()
 
@@ -446,7 +492,8 @@ class WireframeView(QGraphicsView):
             sc = self.scene()
             p = sc.snap_point(self.mapToScene(event.pos()))
             item = ShapeItem(p.x(), p.y(), sc.grid_size, sc.grid_size,
-                             role=self._tab.current_role(), sid=sc.new_id())
+                             role=self._tab.current_role(),
+                             code=sc.new_code(), sid=sc.new_id())
             sc.addItem(item)
             self._drawing = (p, item)
             event.accept()
@@ -524,12 +571,14 @@ class PropertiesPanel(QGroupBox):
         for r in ROLE_ORDER:
             self.role.addItem(role_name(r), r)
         self.role.activated.connect(self._role_changed)
+        self.code = QLabel("—")
         self.label = QLineEdit()
         self.label.editingFinished.connect(self._label_changed)
         self.sx = self._spin(); self.sy = self._spin()
         self.sw = self._spin(1); self.sh = self._spin(1)
         for s in (self.sx, self.sy, self.sw, self.sh):
             s.editingFinished.connect(self._geom_changed)
+        form.addRow("Code", self.code)
         form.addRow("Role", self.role)
         form.addRow("Label", self.label)
         form.addRow("X", self.sx); form.addRow("Y", self.sy)
@@ -543,10 +592,12 @@ class PropertiesPanel(QGroupBox):
         self._item = item
         if item is None:
             self.setEnabled(False)
+            self.code.setText("—")
             return
         self.setEnabled(True)
+        self.code.setText(item.code or "—")
         self.role.setCurrentIndex(ROLE_ORDER.index(item.role) if item.role in ROLE_ORDER else 0)
-        self.label.setText(item._label.toPlainText())
+        self.label.setText(item.label)
         self.sx.setValue(int(item.pos().x())); self.sy.setValue(int(item.pos().y()))
         self.sw.setValue(int(item.size()[0])); self.sh.setValue(int(item.size()[1]))
 
@@ -555,9 +606,8 @@ class PropertiesPanel(QGroupBox):
             self._tab.apply(lambda: self._item.set_role(self.role.currentData()))
 
     def _label_changed(self):
-        if self._item and self.label.text() != self._item._label.toPlainText():
-            self._tab.apply(lambda: (self._item._label.setPlainText(self.label.text() or role_name(self._item.role)),
-                                     self._item._layout_label()))
+        if self._item and self.label.text() != self._item.label:
+            self._tab.apply(lambda: self._item.set_label(self.label.text()))
 
     def _geom_changed(self):
         if self._item:
@@ -566,28 +616,29 @@ class PropertiesPanel(QGroupBox):
 
 
 class LegendPanel(QGroupBox):
+    """The key: one row per shape mapping its canvas CODE -> the full label."""
+
     def __init__(self, tab):
-        super().__init__("Legend")
+        super().__init__("Legend (code → label)")
         self._tab = tab
         lay = QVBoxLayout(self)
         self.list = QListWidget()
-        self.list.itemClicked.connect(self._select_role)
+        self.list.itemClicked.connect(self._select)
         lay.addWidget(self.list)
 
     def refresh(self, scene):
         self.list.clear()
-        counts = {}
-        for s in scene.shapes():
-            counts[s.role] = counts.get(s.role, 0) + 1
-        for role in ROLE_ORDER:
-            if role in counts:
-                it = QListWidgetItem("  %s  (%d)" % (role_name(role), counts[role]))
-                it.setData(Qt.ItemDataRole.UserRole, role)
-                it.setBackground(QColor(ROLE_PALETTE[role]["fill"]))
-                self.list.addItem(it)
+        for s in sorted(scene.shapes(), key=lambda s: WireframeScene._code_num(s.code)):
+            it = QListWidgetItem("%s   %s" % ((s.code or "?").ljust(3), s.label))
+            it.setData(Qt.ItemDataRole.UserRole, s.sid)
+            it.setToolTip("%s · %s" % (role_name(s.role), s.label))
+            it.setBackground(QColor(ROLE_PALETTE[s.role]["fill"]))
+            self.list.addItem(it)
 
-    def _select_role(self, item):
-        self._tab.select_role(item.data(Qt.ItemDataRole.UserRole))
+    def _select(self, item):
+        sid = item.data(Qt.ItemDataRole.UserRole)
+        for s in self._tab.scene.shapes():
+            s.setSelected(s.sid == sid)
 
 
 # ─────────────────────────────── the tab ──────────────────────────────────
@@ -661,7 +712,8 @@ class wireframeTab(QWidget):
                 self.addAction(a)
         tb.addSeparator()
         for label, slot in [("New", self.new), ("Open", self.open), ("Save", self.save),
-                            ("Save As", self.save_as), ("Export PNG", self.export_png)]:
+                            ("Save As", self.save_as),
+                            ("Export Map", self.export_map), ("Export PNG", self.export_png)]:
             b = QPushButton(label); b.clicked.connect(slot); tb.addWidget(b)
         for sc, slot in [("Ctrl+S", self.save), ("Ctrl+O", self.open), ("Ctrl+N", self.new)]:
             a = QAction(self); a.setShortcut(QKeySequence(sc)); a.triggered.connect(slot); self.addAction(a)
@@ -730,7 +782,8 @@ class wireframeTab(QWidget):
         self.scene.clearSelection()
         g = self.scene.grid_size
         for i in sel:
-            d = i.to_dict(); d["id"] = self.scene.new_id()
+            d = i.to_dict()
+            d["id"] = self.scene.new_id(); d["code"] = self.scene.new_code()
             d["x"] += g; d["y"] += g
             ni = ShapeItem.from_dict(d)
             self.scene.addItem(ni); ni.setSelected(True)
@@ -817,8 +870,31 @@ class wireframeTab(QWidget):
         self._path = path
         self.save()
 
+    def export_map(self):
+        """Export an annotated map: code -> {label, role, geometry}. Pairs with
+        the PNG snapshot (which shows the codes) as a self-documenting deliverable."""
+        path, _ = QFileDialog.getSaveFileName(self, "Export annotation map",
+                                              "wireframe.map.json", "JSON (*.json)")
+        if not path:
+            return
+        try:
+            with open(path, "w") as fh:
+                json.dump(self.annotation_map(), fh, indent=2)
+            self.status.setText("exported map %s" % path)
+        except Exception as exc:
+            QMessageBox.critical(self, "Export failed", str(exc))
+
+    def annotation_map(self):
+        """{ code: {label, role, x, y, w, h} } ordered by code."""
+        out = {}
+        for s in sorted(self.scene.shapes(), key=lambda s: WireframeScene._code_num(s.code)):
+            out[s.code or "?"] = {"label": s.label, "role": s.role,
+                                  "x": int(s.pos().x()), "y": int(s.pos().y()),
+                                  "w": int(s.size()[0]), "h": int(s.size()[1])}
+        return out
+
     def export_png(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Export PNG", "wireframe.png", "PNG (*.png)")
+        path, _ = QFileDialog.getSaveFileName(self, "Export PNG snapshot", "wireframe.png", "PNG (*.png)")
         if not path:
             return
         self.render_png(path)
