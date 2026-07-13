@@ -720,6 +720,11 @@ class wireframeTab(QWidget):
         gb.setToolTip("Render an .html file and lay out its regions to scale on the grid")
         gb.clicked.connect(self.generate_from_html)
         tb.addWidget(gb)
+        vb = QPushButton("From Screenshot")
+        vb.setToolTip("Estimate a layout from a UI screenshot via a vision LLM "
+                      "(approximate — a starting point to adjust)")
+        vb.clicked.connect(self.generate_from_screenshot)
+        tb.addWidget(vb)
         for sc, slot in [("Ctrl+S", self.save), ("Ctrl+O", self.open), ("Ctrl+N", self.new)]:
             a = QAction(self); a.setShortcut(QKeySequence(sc)); a.triggered.connect(slot); self.addAction(a)
         return tb
@@ -919,6 +924,51 @@ class wireframeTab(QWidget):
     def _html_error(self, msg):
         QMessageBox.critical(self, "Render failed", msg)
         self._restore_status()
+
+    # -- generate from a screenshot (vision LLM, approximate) --
+    def generate_from_screenshot(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Generate from screenshot", "",
+                                              "Images (*.png *.jpg *.jpeg *.webp *.bmp)")
+        if not path:
+            return
+        try:
+            from . import vision_import
+            from ...servicesTab.src.main import (
+                resolve_routes, LLM_API_DEFAULT, LLM_API_KEY_DEFAULT,
+                _first_env, _config_val)
+        except Exception as exc:
+            QMessageBox.critical(self, "Import error", str(exc))
+            return
+        model = (_first_env("VISION_MODEL") or _config_val("vision_model")
+                 or "Qwen2.5-VL-3B-Instruct-GGUF")
+        chat_url, _ = resolve_routes(LLM_API_DEFAULT, LLM_API_KEY_DEFAULT)
+        self.status.setText("analyzing screenshot with %s … (may cold-load)" % model)
+        self._vision = vision_import.VisionThread(path, chat_url, LLM_API_KEY_DEFAULT,
+                                                  model, parent=self)
+        self._vision.result.connect(self._apply_vision_regions)
+        self._vision.error.connect(self._html_error)
+        self._vision.start()
+
+    def _apply_vision_regions(self, regions):
+        from . import vision_import
+        shapes = vision_import.regions_to_shapes(regions, (CANVAS_W, CANVAS_H),
+                                                 self.scene.grid_size, set(ROLE_PALETTE))
+        if not shapes:
+            QMessageBox.information(self, "Nothing found",
+                                   "The vision model returned no usable regions. "
+                                   "Try a clearer or higher-contrast screenshot.")
+            self._restore_status()
+            return
+        self._begin()
+        for it in self.scene.shapes():
+            self.scene.removeItem(it)
+        for sd in shapes:
+            sd["id"] = self.scene.new_id(); sd["code"] = self.scene.new_code()
+            self.scene.addItem(ShapeItem.from_dict(sd))
+        self.scene.editEnded.emit()
+        self.fit()
+        self.status.setText("generated %d regions from screenshot (approximate — adjust as needed)"
+                            % len(shapes))
 
     def _restore_status(self):
         self._report_zoom()
