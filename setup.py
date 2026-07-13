@@ -28,6 +28,7 @@ setuptools.setup(
         'flask',
         'abstract_paths',
         'PyQt6',
+        'PyQt6-WebEngine',
         'abstract_react',
         'webdriver_manager',
         'scipy',

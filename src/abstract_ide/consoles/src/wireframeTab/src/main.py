@@ -715,6 +715,11 @@ class wireframeTab(QWidget):
                             ("Save As", self.save_as),
                             ("Export Map", self.export_map), ("Export PNG", self.export_png)]:
             b = QPushButton(label); b.clicked.connect(slot); tb.addWidget(b)
+        tb.addSeparator()
+        gb = QPushButton("From HTML")
+        gb.setToolTip("Render an .html file and lay out its regions to scale on the grid")
+        gb.clicked.connect(self.generate_from_html)
+        tb.addWidget(gb)
         for sc, slot in [("Ctrl+S", self.save), ("Ctrl+O", self.open), ("Ctrl+N", self.new)]:
             a = QAction(self); a.setShortcut(QKeySequence(sc)); a.triggered.connect(slot); self.addAction(a)
         return tb
@@ -869,6 +874,54 @@ class wireframeTab(QWidget):
             return
         self._path = path
         self.save()
+
+    # -- generate from HTML (render + real geometry) --
+    def generate_from_html(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Generate from HTML", "",
+                                              "HTML (*.html *.htm)")
+        if not path:
+            return
+        try:
+            from . import html_import
+        except Exception as exc:
+            QMessageBox.critical(self, "Import error", str(exc))
+            return
+        self.status.setText("rendering %s …" % path)
+        try:
+            self._html_view = html_import.render_qtwebengine(
+                path, (CANVAS_W, CANVAS_H),
+                on_done=self._apply_html_boxes, on_error=self._html_error, is_file=True)
+        except ImportError:
+            QMessageBox.critical(self, "QtWebEngine required",
+                                 "Rendering HTML needs PyQt6-WebEngine:\n\n"
+                                 "    pip install PyQt6-WebEngine")
+            self._restore_status()
+
+    def _apply_html_boxes(self, boxes):
+        from . import html_import
+        shapes = html_import.boxes_to_shapes(boxes, (CANVAS_W, CANVAS_H),
+                                             (CANVAS_W, CANVAS_H), self.scene.grid_size)
+        if not shapes:
+            QMessageBox.information(self, "Nothing found",
+                                   "No layout regions were extracted from that HTML.")
+            self._restore_status()
+            return
+        self._begin()
+        for it in self.scene.shapes():
+            self.scene.removeItem(it)
+        for sd in shapes:
+            sd["id"] = self.scene.new_id(); sd["code"] = self.scene.new_code()
+            self.scene.addItem(ShapeItem.from_dict(sd))
+        self.scene.editEnded.emit()
+        self.fit()
+        self.status.setText("generated %d regions from HTML" % len(shapes))
+
+    def _html_error(self, msg):
+        QMessageBox.critical(self, "Render failed", msg)
+        self._restore_status()
+
+    def _restore_status(self):
+        self._report_zoom()
 
     def export_map(self):
         """Export an annotated map: code -> {label, role, geometry}. Pairs with
