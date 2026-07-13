@@ -15,6 +15,8 @@ Both return the same list of {tag, x, y, w, h, text}; boxes_to_shapes() scales
 that to the canvas and snaps to the grid.
 """
 
+from PyQt6.QtCore import QThread, pyqtSignal
+
 # Layout-significant + interactive tags, and how each maps to a wireframe role.
 TAG_ROLE = {
     "header": "nav", "nav": "nav", "footer": "nav",
@@ -119,6 +121,39 @@ def render_qtwebengine(source, viewport, on_done, on_error, is_file=True):
     else:
         view.setHtml(source)
     return view
+
+
+def extract_boxes_from_url(url, viewport=(1280, 800), timeout=30, settle=1.2):
+    """Render a URL with abstract_webtools' robust stealth Chrome driver and read
+    real element geometry via the same EXTRACT_JS. abstract_webtools handles the
+    fetch (headless Chrome, anti-detection, its own fallbacks); we ask its live
+    driver for getBoundingClientRect, so geometry is exact and there's no double
+    render. Blocking — call from a thread. Lazy imports so the tab loads without
+    selenium/abstract_webtools present."""
+    import time
+    from abstract_webtools.managers.manager_utils.src.seleneum import chrome_driver
+    with chrome_driver(headless=True) as driver:
+        driver.set_window_size(viewport[0], viewport[1])
+        driver.set_page_load_timeout(timeout)
+        driver.get(url)
+        time.sleep(settle)                         # let late JS/layout settle
+        return driver.execute_script("return " + EXTRACT_JS) or []
+
+
+class UrlImportThread(QThread):
+    """Off-GUI: fetch+render a URL via abstract_webtools and extract geometry."""
+    result = pyqtSignal(list)
+    error = pyqtSignal(str)
+
+    def __init__(self, url, viewport, parent=None):
+        super().__init__(parent)
+        self._url, self._vp = url, viewport
+
+    def run(self):
+        try:
+            self.result.emit(extract_boxes_from_url(self._url, self._vp))
+        except Exception as exc:
+            self.error.emit(str(exc))
 
 
 def render_playwright(source, viewport, is_file=True):

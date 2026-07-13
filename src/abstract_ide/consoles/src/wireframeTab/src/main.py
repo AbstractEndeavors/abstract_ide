@@ -24,8 +24,8 @@ from PyQt6.QtGui import (
 )
 from PyQt6.QtWidgets import (
     QCheckBox, QComboBox, QFileDialog, QFormLayout, QGraphicsRectItem,
-    QGraphicsScene, QGraphicsTextItem, QGraphicsView, QHBoxLayout, QLabel,
-    QLineEdit, QMessageBox, QPushButton, QSpinBox, QSplitter, QToolBar,
+    QGraphicsScene, QGraphicsTextItem, QGraphicsView, QHBoxLayout, QInputDialog,
+    QLabel, QLineEdit, QMessageBox, QPushButton, QSpinBox, QSplitter, QToolBar,
     QVBoxLayout, QWidget, QListWidget, QListWidgetItem, QGroupBox,
 )
 
@@ -720,6 +720,11 @@ class wireframeTab(QWidget):
         gb.setToolTip("Render an .html file and lay out its regions to scale on the grid")
         gb.clicked.connect(self.generate_from_html)
         tb.addWidget(gb)
+        ub = QPushButton("From URL")
+        ub.setToolTip("Fetch + render a live URL (via abstract_webtools) and lay out "
+                      "its regions to scale")
+        ub.clicked.connect(self.generate_from_url)
+        tb.addWidget(ub)
         vb = QPushButton("From Screenshot")
         vb.setToolTip("Estimate a layout from a UI screenshot via a vision LLM "
                       "(approximate — a starting point to adjust)")
@@ -924,6 +929,26 @@ class wireframeTab(QWidget):
     def _html_error(self, msg):
         QMessageBox.critical(self, "Render failed", msg)
         self._restore_status()
+
+    # -- generate from a live URL (abstract_webtools render → real geometry) --
+    def generate_from_url(self):
+        url, ok = QInputDialog.getText(self, "Generate from URL",
+                                       "Page URL (fetched + rendered via abstract_webtools):")
+        if not ok or not url.strip():
+            return
+        url = url.strip()
+        if not url.startswith(("http://", "https://")):
+            url = "https://" + url
+        try:
+            from . import html_import
+        except Exception as exc:
+            QMessageBox.critical(self, "Import error", str(exc))
+            return
+        self.status.setText("fetching + rendering %s …" % url)
+        self._url_thread = html_import.UrlImportThread(url, (CANVAS_W, CANVAS_H), parent=self)
+        self._url_thread.result.connect(self._apply_html_boxes)   # same box format
+        self._url_thread.error.connect(self._html_error)
+        self._url_thread.start()
 
     # -- generate from a screenshot (vision LLM, approximate) --
     def generate_from_screenshot(self):
