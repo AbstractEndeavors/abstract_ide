@@ -698,6 +698,7 @@ class LogViewerDialog(QDialog):
         text = QTextEdit()
         text.setReadOnly(True)
         text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
+        text.setStyleSheet("QTextEdit { background:#ffffff; color:#1a1a1a; }")
         text.setText(logs)
         layout.addWidget(text)
         close_btn = QPushButton("Close")

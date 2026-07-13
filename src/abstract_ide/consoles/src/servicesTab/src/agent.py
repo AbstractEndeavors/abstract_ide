@@ -162,6 +162,12 @@ class AgentChatDialog(QDialog):
         layout = QVBoxLayout(self)
         self.transcript = QTextEdit()
         self.transcript.setReadOnly(True)
+        # Force a fixed, readable colour scheme so the transcript (and the
+        # command-output blocks) stay legible under a dark system theme, where
+        # the inherited default text colour is white — which was rendering the
+        # log output as white-on-near-white.
+        self.transcript.setStyleSheet(
+            "QTextEdit { background:#ffffff; color:#1a1a1a; }")
         layout.addWidget(self.transcript, 1)
 
         # Approval bar — hidden until the model proposes a command.
@@ -171,7 +177,7 @@ class AgentChatDialog(QDialog):
         pend.addWidget(QLabel("Run command?"))
         self.cmd_label = QLineEdit()
         self.cmd_label.setReadOnly(True)
-        self.cmd_label.setStyleSheet("font-family: monospace;")
+        self.cmd_label.setStyleSheet("font-family: monospace; background:#ffffff; color:#1a1a1a;")
         pend.addWidget(self.cmd_label, 1)
         self.run_btn = QPushButton("Run")
         self.run_btn.clicked.connect(lambda: self._approve(True))
@@ -256,7 +262,8 @@ class AgentChatDialog(QDialog):
         danger = looks_dangerous(cmd)
         blocked = danger and READONLY
         self.cmd_label.setStyleSheet(
-            "font-family: monospace; color: %s;" % ("#b00000" if danger else "#000"))
+            "font-family: monospace; background:#ffffff; color: %s;"
+            % ("#b00000" if danger else "#111111"))
         if blocked:
             self.run_btn.setText("Blocked (read-only)")
             self.run_btn.setEnabled(False)
@@ -278,8 +285,10 @@ class AgentChatDialog(QDialog):
         self.status.setText("Thinking…")
 
     def _on_ran(self, cmd, output):
+        # explicit dark text on a light block so command output is always legible
         self._append_html(
-            "<pre style='background:#f4f4f4; padding:4px;'>$ %s\n%s</pre>"
+            "<pre style='background:#f4f4f4; color:#1a1a1a; padding:4px; "
+            "border-left:3px solid #bbbbbb;'>$ %s\n%s</pre>"
             % (html.escape(cmd), html.escape(output[:4000])))
 
     def _on_skipped(self, cmd):
