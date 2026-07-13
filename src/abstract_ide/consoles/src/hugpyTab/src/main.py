@@ -45,6 +45,7 @@ from ...servicesTab.src.main import (
     LLM_API_CHOICES, LLM_API_DEFAULT, LLM_API_KEY_DEFAULT, LLM_MAX_TOKENS,
     _origin, llm_stream, think_suffix,
 )
+from .generate import GeneratePanel
 
 # ──────────────────────────── model classification ─────────────────────────
 # The model's task metadata is what associates it with the right inputs and the
@@ -84,6 +85,33 @@ def primary_task(m):
         return m["primary_task"]
     ts = sorted(_tasks(m))
     return ts[0] if ts else "unknown"
+
+
+# Non-chat modality routing — which generative panel a model's task maps to.
+IMAGE_TASKS = {"text-to-image", "image-to-image"}
+VIDEO_TASKS = {"image-to-video", "video-generation"}
+EMBED_TASKS = {"feature-extraction", "sentence-similarity"}
+AUDIO_TASKS = {"automatic-speech-recognition"}
+ANALYZE_TASKS = {"depth-estimation", "object-detection",
+                 "image-classification", "image-segmentation"}
+
+
+def modality(m):
+    """Which workbench a model drives: chat, or a generative/analysis panel."""
+    if is_chat(m):
+        return "chat"
+    pt = primary_task(m)
+    if pt in IMAGE_TASKS:
+        return "image"
+    if pt in VIDEO_TASKS:
+        return "video"
+    if pt in EMBED_TASKS:
+        return "embed"
+    if pt in AUDIO_TASKS:
+        return "audio"
+    if pt in ANALYZE_TASKS:
+        return "analyze"
+    return "other"
 
 
 def _fmt_gb(n):
@@ -306,9 +334,16 @@ class hugpyTab(QWidget):
         split = QSplitter(Qt.Orientation.Horizontal)
         split.addWidget(self._build_catalog())
         self.tabs = QTabWidget()
-        self.tabs.addTab(self._build_chat(), "Chat")
-        self.tabs.addTab(self._build_fleet(), "Fleet")
-        self.tabs.addTab(self._build_schema(), "Schema")
+        self._chat_tab = self._build_chat()
+        self.gen_panel = GeneratePanel(get_ctx=lambda: (
+            self._base(), self._key(),
+            self._sel.get("model_key") if self._sel else None))
+        self._fleet_tab = self._build_fleet()
+        self._schema_tab = self._build_schema()
+        self.tabs.addTab(self._chat_tab, "Chat")
+        self.tabs.addTab(self.gen_panel, "Generate")
+        self.tabs.addTab(self._fleet_tab, "Fleet")
+        self.tabs.addTab(self._schema_tab, "Schema")
         self.tabs.currentChanged.connect(self._on_tab_changed)
         split.addWidget(self.tabs)
         split.setSizes([360, 740])
@@ -492,15 +527,16 @@ class hugpyTab(QWidget):
             self._threads.remove(thread)
 
     def _on_tab_changed(self, idx):
-        if idx == 1 and self.workers.rowCount() == 0:
+        w = self.tabs.widget(idx)
+        if w is self._fleet_tab and self.workers.rowCount() == 0:
             self._refresh_fleet()
-        elif idx == 2 and not self._routes_loaded:
+        elif w is self._schema_tab and not self._routes_loaded:
             self._refresh_routes()
 
     # ── catalog ──────────────────────────────────────────────────────────
     def _on_refresh_clicked(self):
         self._refresh_catalog()
-        if self.tabs.currentIndex() == 1:
+        if self.tabs.currentWidget() is self._fleet_tab:
             self._refresh_fleet()
 
     def _refresh_catalog(self):
@@ -602,17 +638,21 @@ class hugpyTab(QWidget):
         vision = is_vision(m)
         self.attach_btn.setVisible(vision)
         pt = primary_task(m)
-        if is_chat(m):
+        mod = modality(m)
+        if mod == "chat":
             kind = "vision chat (image + text -> text)" if vision else "chat (text -> text)"
             self.chat_header.setText("%s   .   task: %s   .   %s" % (mk, pt, kind))
             self._set_chat_enabled(True)
+            self.gen_panel.set_model(m, "other")
+            self.tabs.setCurrentWidget(self._chat_tab)
             self.prompt.setFocus()
         else:
             self.chat_header.setText(
-                "%s   .   task: %s\nThis is a generative '%s' model — image/audio/video "
-                "generation isn't in this build yet. Use the Schema tab to call its "
-                "endpoint directly." % (mk, pt, pt))
+                "%s   .   task: %s\nGenerative model — configured in the Generate tab."
+                % (mk, pt))
             self._set_chat_enabled(False)
+            self.gen_panel.set_model(m, mod)
+            self.tabs.setCurrentWidget(self.gen_panel)
 
     def _set_chat_enabled(self, on):
         self.prompt.setEnabled(on)
@@ -893,6 +933,7 @@ class hugpyTab(QWidget):
                 t.wait(2000)
             except RuntimeError:
                 pass
+        self.gen_panel.shutdown()
         event.accept()
 
 
